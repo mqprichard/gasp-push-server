@@ -91,7 +91,7 @@ public class Config implements ServletContextListener {
     private String getPemFromStream(String Filename) {
         String pemData = new String();
 
-        try{
+        try {
             // Load cert/key file via ClassLoader
             InputStream is = this.getClass()
                                  .getClassLoader()
