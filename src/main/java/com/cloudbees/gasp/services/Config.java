@@ -91,16 +91,16 @@ public class Config implements ServletContextListener {
     private String getPemFromStream(String Filename) {
         String pemData = new String();
 
-        // Load cert/key file via ClassLoader
-        InputStream is = this.getClass()
-                             .getClassLoader()
-                             .getResourceAsStream(Filename);
-
-        // Read PEM cert/key file from InputStream
-        InputStreamReader isr = new InputStreamReader ( is ) ;
-        BufferedReader reader = new BufferedReader ( isr ) ;
-
         try{
+            // Load cert/key file via ClassLoader
+            InputStream is = this.getClass()
+                                 .getClassLoader()
+                                 .getResourceAsStream(Filename);
+
+            // Read PEM cert/key file from InputStream
+            InputStreamReader isr = new InputStreamReader ( is ) ;
+            BufferedReader reader = new BufferedReader ( isr ) ;
+
             String readString = reader.readLine ( ) ;
             while ( readString != null ) {
                 // Add newline to each row of PEM cert/key
