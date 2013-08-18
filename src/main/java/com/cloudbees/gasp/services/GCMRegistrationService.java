@@ -35,7 +35,7 @@ public class GCMRegistrationService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doRegister(@FormParam("regId") String regId) {
 
-        GCMDataStore.register(regId);
+        //GCMDataStore.register(regId);
         LOGGER.info("Registered: " + regId);
 
         return Response.status(Response.Status.OK).build();
@@ -46,7 +46,7 @@ public class GCMRegistrationService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doUnregister(@FormParam("regId") String regId) {
 
-        GCMDataStore.unregister(regId);
+        //GCMDataStore.unregister(regId);
         LOGGER.info("Unregistered: " + regId);
 
         return Response.status(Response.Status.OK).build();

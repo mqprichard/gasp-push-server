@@ -35,7 +35,7 @@ public class APNRegistrationService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doRegister(@FormParam("token") String regId) {
 
-        APNDataStore.register(regId);
+        //APNDataStore.register(regId);
         LOGGER.info("Registered: " + regId);
 
         return Response.status(Response.Status.OK).build();
@@ -46,7 +46,7 @@ public class APNRegistrationService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doUnregister(@FormParam("token") String regId) {
 
-        APNDataStore.unregister(regId);
+        //APNDataStore.unregister(regId);
         LOGGER.info("Unregistered: " + regId);
 
         return Response.status(Response.Status.OK).build();
