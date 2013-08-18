@@ -158,5 +158,6 @@ public class Config implements ServletContextListener {
         }
     }
     public void contextDestroyed(ServletContextEvent event) {
+        LOGGER.debug("contextDestroyed()");
     }
 }
