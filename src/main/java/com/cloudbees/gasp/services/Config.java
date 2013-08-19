@@ -57,6 +57,7 @@ public class Config implements ServletContextListener {
 
     // AWS SNS Client object
     private static AmazonSNS amazonSNS;
+    private static SNSMobile snsMobile = new SNSMobile();
 
 
     public static String getApnsCertificate() {
@@ -152,12 +153,34 @@ public class Config implements ServletContextListener {
             // Read AWS credentials and create new SNS client
             amazonSNS = new AmazonSNSClient(new PropertiesCredentials(awsCredentials));
             LOGGER.debug("Read AWS Credentials from: " + getAwsCredentialsFilename());
+
+            String applicationName = "gasp-snsmobile-service";
+            LOGGER.debug("Application name: " + applicationName);
+
+            snsMobile.setSnsClient(Config.getAmazonSNS());
+
+            snsMobile.setApnPlatformArn(
+                    snsMobile.getPlatformArn(SNSMobile.Platform.APNS_SANDBOX,
+                            Config.getApnsCertificate(),
+                            Config.getApnsKey(),
+                            applicationName));
+
+            snsMobile.setGcmPlatformArn(
+                    snsMobile.getPlatformArn(SNSMobile.Platform.GCM,
+                            "",
+                            Config.getGcmApiKey(),
+                            applicationName));
+
         }
         catch (Exception e){
             e.printStackTrace();
         }
     }
     public void contextDestroyed(ServletContextEvent event) {
-        LOGGER.debug("contextDestroyed()");
+        // Delete the APN Platform Application.
+        snsMobile.deletePlatformApplication(snsMobile.getApnPlatformArn());
+
+        // Delete the GCM Platform Application.
+        snsMobile.deletePlatformApplication(snsMobile.getGcmPlatformArn());
     }
 }
