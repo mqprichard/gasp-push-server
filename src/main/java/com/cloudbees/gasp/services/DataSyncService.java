@@ -80,28 +80,24 @@ public class DataSyncService {
             Review review = new Gson().fromJson(jsonInput, Review.class);
             LOGGER.info("Syncing Review Id: " + String.valueOf(review.getId()));
 
-            //TODO: Retrieve all registered device tokens
-            String apnEndpointArn = APNDataStore.getTokens().get(0);
-            LOGGER.debug("APN endpoint ARN: " + apnEndpointArn);
-
-            //TODO: Retrieve all registration IDs
-            String gcmEndpointArn = GCMDataStore.getTokens().get(0);
-            LOGGER.debug("GCM endpoint ARN: " + gcmEndpointArn);
-
-
-
             try {
                 SNSMobile snsMobile = new SNSMobile();
 
-                // Send message to APN endpoint
-                snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
-                                           apnEndpointArn,
-                                           getApnMessage("Gasp! update: review " + review.getId()));
+                // Send update to all registered APN endpoints
+                for (String endpointArn: APNDataStore.getTokens() ) {
+                    LOGGER.debug("Sending update to APN endpoint ARN: " + endpointArn);
+                    snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
+                                               endpointArn,
+                                               getApnMessage("Gasp! update: review " + review.getId()));
+                }
 
-                // Send message to GCM endpoint
-                snsMobile.pushNotification(SNSMobile.Platform.GCM,
-                                           gcmEndpointArn,
-                                           getGcmMessage("Gasp! update: review " + review.getId()));
+                // Send update to all registered GCM endpoints
+                for (String endpointArn: GCMDataStore.getTokens()) {
+                    LOGGER.debug("Sending update to GCM endpoint ARN: " + endpointArn);
+                    snsMobile.pushNotification(SNSMobile.Platform.GCM,
+                                               endpointArn,
+                                               getGcmMessage("Gasp! update: review " + review.getId()));
+                }
 
             } catch (AmazonServiceException ase) {
                 LOGGER.debug("AmazonServiceException");
@@ -127,9 +123,7 @@ public class DataSyncService {
             Restaurant restaurant = new Gson().fromJson(jsonInput, Restaurant.class);
             LOGGER.info("Syncing Restaurant Id: " + String.valueOf(restaurant.getId()));
 
-            //TODO: Retrieve all registered device tokens
-            String token = APNDataStore.getTokens().get(0);
-            LOGGER.debug("APNS Device Token: " + token);
+            //TODO: Move APN/GCM update into separate function and include here
 
         } catch (Exception e) {
             return;
@@ -144,9 +138,7 @@ public class DataSyncService {
             User user = new Gson().fromJson(jsonInput, User.class);
             LOGGER.info("Syncing User Id: " + String.valueOf(user.getId()));
 
-            //TODO: Retrieve all registered device tokens
-            String token = APNDataStore.getTokens().get(0);
-            LOGGER.debug("APNS Device Token: " + token);
+            //TODO: Move APN/GCM update into separate function and include here
 
         } catch (Exception e) {
             return;
