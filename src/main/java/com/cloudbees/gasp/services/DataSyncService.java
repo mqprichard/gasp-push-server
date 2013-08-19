@@ -40,9 +40,6 @@ public class DataSyncService {
 
     private static final Config config = new Config();
 
-    private String gcmPlatformArn;
-    private String apnPlatformArn;
-
     private String getApnMessage(String msg) {
         Map<String, Object> appleMessageMap = new HashMap<String, Object>();
         Map<String, Object> appMessageMap = new HashMap<String, Object>();
@@ -99,16 +96,17 @@ public class DataSyncService {
                 SNSMobile snsMobile = new SNSMobile();
                 snsMobile.setSnsClient(Config.getAmazonSNS());
 
-                apnPlatformArn = snsMobile.getPlatformArn(SNSMobile.Platform.APNS_SANDBOX,
-                                                          Config.getApnsCertificate(),
-                                                          Config.getApnsKey(),
-                                                          applicationName);
+                snsMobile.setApnPlatformArn(
+                        snsMobile.getPlatformArn(SNSMobile.Platform.APNS_SANDBOX,
+                                                 Config.getApnsCertificate(),
+                                                 Config.getApnsKey(),
+                                                 applicationName));
 
                 // Create an APN App Endpoint.
                 CreatePlatformEndpointResult platformEndpointResult =
                         snsMobile.createPlatformEndpoint("Gasp APN Platform Endpoint",
                                                          deviceToken,
-                                                         apnPlatformArn);
+                                                         snsMobile.getApnPlatformArn());
 
                 // Send a message to an APN endpoint
                 snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
@@ -116,24 +114,25 @@ public class DataSyncService {
                                            getApnMessage("Gasp! update: review " + review.getId()));
 
                 // Delete the APN Platform Application.
-                snsMobile.deletePlatformApplication(apnPlatformArn);
+                snsMobile.deletePlatformApplication(snsMobile.getApnPlatformArn());
 
-                gcmPlatformArn = snsMobile.getPlatformArn(SNSMobile.Platform.GCM,
-                                                          "",
-                                                          Config.getGcmApiKey(),
-                                                          applicationName);
+                snsMobile.setGcmPlatformArn(
+                        snsMobile.getPlatformArn(SNSMobile.Platform.GCM,
+                                                 "",
+                                                 Config.getGcmApiKey(),
+                                                 applicationName));
 
                 // Create an GCM App Endpoint.
                 platformEndpointResult = snsMobile.createPlatformEndpoint("Gasp GCM Platform Endpoint",
-                                                                         registrationId,
-                                                                         gcmPlatformArn);
+                                                                          registrationId,
+                                                                          snsMobile.getGcmPlatformArn());
 
                 snsMobile.pushNotification(SNSMobile.Platform.GCM,
                                            platformEndpointResult.getEndpointArn(),
                                            getGcmMessage("Gasp! update: review " + review.getId()));
 
                 // Delete the GCM Platform Application.
-                snsMobile.deletePlatformApplication(gcmPlatformArn);
+                snsMobile.deletePlatformApplication(snsMobile.getGcmPlatformArn());
 
             } catch (AmazonServiceException ase) {
                 LOGGER.debug("AmazonServiceException");

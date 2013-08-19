@@ -38,6 +38,8 @@ public class SNSMobile {
     }
 
     private static AmazonSNS snsClient = null;
+    private static String gcmPlatformArn;
+    private static String apnPlatformArn;
 
     public AmazonSNS getSnsClient() {
         return snsClient;
@@ -45,6 +47,22 @@ public class SNSMobile {
 
     public void setSnsClient(AmazonSNS snsClient) {
         SNSMobile.snsClient = snsClient;
+    }
+
+    public String getGcmPlatformArn() {
+        return gcmPlatformArn;
+    }
+
+    public void setGcmPlatformArn(String gcmPlatformArn) {
+        this.gcmPlatformArn = gcmPlatformArn;
+    }
+
+    public String getApnPlatformArn() {
+        return apnPlatformArn;
+    }
+
+    public void setApnPlatformArn(String apnPlatformArn) {
+        this.apnPlatformArn = apnPlatformArn;
     }
 
     public String getPlatformArn(Platform platform,
