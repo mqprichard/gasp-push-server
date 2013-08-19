@@ -46,8 +46,7 @@ Setup
    - (to test locally) mvn bees:run -DGCM_APIKEY=your_gcm_apikey and use localhost:8080 for all curl commands
 
 6. Deploy to CloudBees:
-   - `bees app:deploy -a gasp-snsmobile-server target/gasp-snsmobile-server.war`
-   - `bees config:set -a gasp-snsmobile-server -P GCM_APIKEY=your_gcm_apikey
+   - `bees app:deploy -a gasp-snsmobile-server -P GCM_APIKEY=your_gcm_apikey target/gasp-snsmobile-server.war`
 
 7. To test the service:
    - `curl -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/gcm/register -d 'regId=test_gcm-regid'`
