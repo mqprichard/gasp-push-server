@@ -43,10 +43,10 @@ public class DataSyncService {
     private String gcmPlatformArn;
     private String apnPlatformArn;
 
-    private String getApnMessage() {
+    private String getApnMessage(String msg) {
         Map<String, Object> appleMessageMap = new HashMap<String, Object>();
         Map<String, Object> appMessageMap = new HashMap<String, Object>();
-        appMessageMap.put("alert", "You have a Gasp! update");
+        appMessageMap.put("alert", msg);
         appMessageMap.put("badge", 1);
         appMessageMap.put("sound", "default");
         appleMessageMap.put("aps", appMessageMap);
@@ -100,7 +100,7 @@ public class DataSyncService {
                 // Send a message to an APN endpoint
                 snsMobile.apnNotification(SNSMobile.Platform.APNS_SANDBOX,
                                           platformEndpointResult.getEndpointArn(),
-                                          getApnMessage());
+                                          getApnMessage("Gasp! update: review " + review.getId()));
 
                 // Delete the APN Platform Application.
                 snsMobile.deletePlatformApplication(apnPlatformArn);
