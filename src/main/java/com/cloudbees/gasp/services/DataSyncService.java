@@ -85,7 +85,7 @@ public class DataSyncService {
 
                 // Send update to all registered APN endpoints
                 for (String endpointArn: APNDataStore.getTokens() ) {
-                    LOGGER.debug("Sending update to APN endpoint ARN: " + endpointArn);
+                    LOGGER.info("Sending update to APN endpoint ARN: " + endpointArn);
                     snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
                                                endpointArn,
                                                getApnMessage("Gasp! update: review " + review.getId()));
@@ -93,7 +93,7 @@ public class DataSyncService {
 
                 // Send update to all registered GCM endpoints
                 for (String endpointArn: GCMDataStore.getTokens()) {
-                    LOGGER.debug("Sending update to GCM endpoint ARN: " + endpointArn);
+                    LOGGER.info("Sending update to GCM endpoint ARN: " + endpointArn);
                     snsMobile.pushNotification(SNSMobile.Platform.GCM,
                                                endpointArn,
                                                getGcmMessage("Gasp! update: review " + review.getId()));

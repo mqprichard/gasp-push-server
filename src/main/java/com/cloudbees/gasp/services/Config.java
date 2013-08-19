@@ -146,6 +146,7 @@ public class Config implements ServletContextListener {
                                                  Config.getApnsCertificate(),
                                                  Config.getApnsKey(),
                                                  applicationName));
+                LOGGER.info("Created APN Platform ARN: " + snsMobile.getApnPlatformArn());
 
                 // Create SNS Mobile Platform ARN for GCM
                 snsMobile.setGcmPlatformArn(
@@ -153,6 +154,7 @@ public class Config implements ServletContextListener {
                                                  "",
                                                  Config.getGcmApiKey(),
                                                  applicationName));
+                LOGGER.info("Created GCM platform ARN: " + snsMobile.getGcmPlatformArn());
 
             } catch (AmazonServiceException ase) {
                 LOGGER.debug("AmazonServiceException");
@@ -174,9 +176,12 @@ public class Config implements ServletContextListener {
         try {
             // Delete the APN Platform Application.
             snsMobile.deletePlatformApplication(snsMobile.getApnPlatformArn());
+            LOGGER.info("Deleted APN platform ARN: " + snsMobile.getApnPlatformArn());
 
             // Delete the GCM Platform Application.
             snsMobile.deletePlatformApplication(snsMobile.getGcmPlatformArn());
+            LOGGER.info("Deleted GCM platform ARN: " + snsMobile.getGcmPlatformArn());
+
             } catch (AmazonServiceException ase) {
                 LOGGER.debug("AmazonServiceException");
                 LOGGER.debug("  Error Message:    " + ase.getMessage());
