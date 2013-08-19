@@ -42,8 +42,8 @@ Setup
    - Copy your iOS Push Services certificate (in PEM format) to src/main/webapp/WEB-INF/classes/apnsappcert.pem
    - Copy your iOS Push Services private key (in PEM format) to src/main/webapp/WEB-INF/classes/apnsappkey.pem
    - Copy your AWS credentials properties file to src/main/webapp/WEB-INF/classes/AwsCredentials.properties
-   - mvn build install
-   - (to test locally) mvn bees:run -DGCM_APIKEY=your_gcm_apikey and use localhost:8080 for all curl commands
+   - `mvn build install`
+   - (to test locally) `mvn bees:run -DGCM_APIKEY=your_gcm_apikey` and use localhost:8080 for all curl commands
 
 6. Deploy to CloudBees:
    - `bees app:deploy -a gasp-snsmobile-server -P GCM_APIKEY=your_gcm_apikey target/gasp-snsmobile-server.war`
