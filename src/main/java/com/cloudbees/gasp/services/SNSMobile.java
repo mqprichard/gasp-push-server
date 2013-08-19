@@ -47,24 +47,51 @@ public class SNSMobile {
         SNSMobile.snsClient = snsClient;
     }
 
-    public void pushNotification(Platform platform, String principal,
-                                  String credential, String platformToken, String applicationName){
-        // Create Platform Application. This corresponds to an app on a platform.
-        CreatePlatformApplicationResult platformApplicationResult = createPlatformApplication(
-                applicationName, platform, principal, credential);
+    public String getPlatformArn(Platform platform,
+                                 String principal,
+                                 String credential,
+                                 String applicationName) {
+        switch(platform) {
+            case APNS_SANDBOX:
+            case GCM:
+                // Create Platform Application. This corresponds to an app on a platform.
+                CreatePlatformApplicationResult platformApplicationResult = createPlatformApplication(
+                        applicationName, platform, principal, credential);
 
-        // The Platform Application Arn can be used to uniquely identify the Platform Application.
-        String platformApplicationArn = platformApplicationResult.getPlatformApplicationArn();
+                // The Platform Application Arn can be used to uniquely identify the Platform Application.
+                String platformApplicationArn = platformApplicationResult.getPlatformApplicationArn();
 
-        // Create an Endpoint. This corresponds to an app on a device.
-        CreatePlatformEndpointResult platformEndpointResult = createPlatformEndpoint(
-                "CustomData", platformToken, platformApplicationArn);
+                LOGGER.debug("Created Platform Application Arn: " + platformApplicationArn);
+                return platformApplicationArn;
 
+            default:
+                throw new IllegalArgumentException("Platform Not supported : " + platform.name());
+        }
+    }
+
+    public void apnNotification(Platform platform,
+                                String platformEndpointArn,
+                                String theMessage) {
         // Publish a push notification to an Endpoint.
-        PublishResult publishResult = publish(platformEndpointResult.getEndpointArn(), platform);
+        PublishResult publishResult = apnPublish(platformEndpointArn, platform, theMessage);
+    }
 
-        // Delete the Platform Application since we will no longer be using it.
-        deletePlatformApplication(platformApplicationArn);
+    private PublishResult apnPublish(String endpointArn, Platform platform, String theMessage) {
+        PublishRequest publishRequest = new PublishRequest();
+        Map<String, String> messageMap = new HashMap<String, String>();
+        String message;
+        messageMap.put("default", defaultMessage);
+        messageMap.put(platform.name(), theMessage);
+        // For direct publish to mobile end points, topicArn is not relevant.
+        publishRequest.setTargetArn(endpointArn);
+        publishRequest.setMessageStructure("json");
+        message = jsonify(messageMap);
+
+        // Display the message that will be sent to the endpoint/
+        LOGGER.debug(message);
+
+        publishRequest.setMessage(message);
+        return snsClient.publish(publishRequest);
     }
 
     private CreatePlatformApplicationResult createPlatformApplication(
@@ -79,7 +106,7 @@ public class SNSMobile {
         return snsClient.createPlatformApplication(platformApplicationRequest);
     }
 
-    private CreatePlatformEndpointResult createPlatformEndpoint(
+    public CreatePlatformEndpointResult createPlatformEndpoint(
             String customData, String platformToken, String applicationArn) {
         CreatePlatformEndpointRequest platformEndpointRequest = new CreatePlatformEndpointRequest();
         platformEndpointRequest.setCustomUserData(customData);
@@ -107,7 +134,7 @@ public class SNSMobile {
         Map<String, Object> appleMessageMap = new HashMap<String, Object>();
         Map<String, Object> appMessageMap = new HashMap<String, Object>();
         appMessageMap.put("alert", "You have a Gasp! update");
-        appMessageMap.put("badge", 9);
+        appMessageMap.put("badge", 1);
         appMessageMap.put("sound", "default");
         appleMessageMap.put("aps", appMessageMap);
         return jsonify(appleMessageMap);
@@ -155,7 +182,7 @@ public class SNSMobile {
         return snsClient.publish(publishRequest);
     }
 
-    private void deletePlatformApplication(String applicationArn) {
+    public void deletePlatformApplication(String applicationArn) {
         DeletePlatformApplicationRequest request = new DeletePlatformApplicationRequest();
         request.setPlatformApplicationArn(applicationArn);
         snsClient.deletePlatformApplication(request);

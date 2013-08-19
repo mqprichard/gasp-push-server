@@ -18,10 +18,12 @@ package com.cloudbees.gasp.services;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.sns.model.CreatePlatformEndpointResult;
 import com.cloudbees.gasp.model.Restaurant;
 import com.cloudbees.gasp.model.Review;
 import com.cloudbees.gasp.model.User;
 import com.google.gson.Gson;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +31,37 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
+import java.util.HashMap;
+import java.util.Map;
 
 @Path("/")
 public class DataSyncService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSyncService.class.getName());
 
     private static final Config config = new Config();
+
+    private String gcmPlatformArn;
+    private String apnPlatformArn;
+
+    private String getApnMessage() {
+        Map<String, Object> appleMessageMap = new HashMap<String, Object>();
+        Map<String, Object> appMessageMap = new HashMap<String, Object>();
+        appMessageMap.put("alert", "You have a Gasp! update");
+        appMessageMap.put("badge", 1);
+        appMessageMap.put("sound", "default");
+        appleMessageMap.put("aps", appMessageMap);
+        return jsonify(appleMessageMap);
+    }
+
+    private static String jsonify(Object message) {
+        try {
+            return new ObjectMapper().writeValueAsString(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw (RuntimeException) e;
+        }
+    }
+
 
     @POST
     @Path("/reviews")
@@ -59,17 +86,37 @@ public class DataSyncService {
                 SNSMobile snsMobile = new SNSMobile();
                 snsMobile.setSnsClient(Config.getAmazonSNS());
 
-                //snsMobile.pushNotification(SNSMobile.Platform.GCM,
-                //                           "",
-                //                           Config.getGcmApiKey(),
-                //                           registrationId,
-                //                           applicationName);
+                apnPlatformArn = snsMobile.getPlatformArn(SNSMobile.Platform.APNS_SANDBOX,
+                                                          Config.getApnsCertificate(),
+                                                          Config.getApnsKey(),
+                                                          applicationName);
 
-                snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
-                                           Config.getApnsCertificate(),
-                                           Config.getApnsKey(),
-                                           deviceToken,
-                                           applicationName);
+                // Create an APN App Endpoint.
+                CreatePlatformEndpointResult platformEndpointResult =
+                        snsMobile.createPlatformEndpoint("Gasp APN Platform Endpoint",
+                                                         deviceToken,
+                                                         apnPlatformArn);
+
+                // Send a message to an APN endpoint
+                snsMobile.apnNotification(SNSMobile.Platform.APNS_SANDBOX,
+                                          platformEndpointResult.getEndpointArn(),
+                                          getApnMessage());
+
+                // Delete the APN Platform Application.
+                snsMobile.deletePlatformApplication(apnPlatformArn);
+
+                gcmPlatformArn = snsMobile.getPlatformArn(SNSMobile.Platform.GCM,
+                                                          "",
+                                                          Config.getGcmApiKey(),
+                                                          applicationName);
+
+                // Create an GCM App Endpoint.
+               platformEndpointResult = snsMobile.createPlatformEndpoint("Gasp GCM Platform Endpoint",
+                                                                         registrationId,
+                                                                         gcmPlatformArn);
+
+                // Delete the GCM Platform Application.
+                snsMobile.deletePlatformApplication(gcmPlatformArn);
 
             } catch (AmazonServiceException ase) {
                 LOGGER.debug("AmazonServiceException");
