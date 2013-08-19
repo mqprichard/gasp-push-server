@@ -69,9 +69,9 @@ public class SNSMobile {
         }
     }
 
-    public void apnNotification(Platform platform,
-                                String platformEndpointArn,
-                                String theMessage) {
+    public void pushNotification(Platform platform,
+                                 String platformEndpointArn,
+                                 String theMessage) {
         // Publish a push notification to an Endpoint.
         PublishResult publishResult = apnPublish(platformEndpointArn, platform, theMessage);
     }

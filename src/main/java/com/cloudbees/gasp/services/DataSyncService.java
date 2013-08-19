@@ -53,6 +53,19 @@ public class DataSyncService {
         return jsonify(appleMessageMap);
     }
 
+    private String getGcmMessage(String msg) {
+        Map<String, String> payload = new HashMap<String, String>();
+        payload.put("message", msg);
+
+        Map<String, Object> androidMessageMap = new HashMap<String, Object>();
+        androidMessageMap.put("collapse_key", "Welcome");
+        androidMessageMap.put("data", payload);
+        androidMessageMap.put("delay_while_idle", true);
+        androidMessageMap.put("time_to_live", 125);
+        androidMessageMap.put("dry_run", false);
+        return jsonify(androidMessageMap);
+    }
+
     private static String jsonify(Object message) {
         try {
             return new ObjectMapper().writeValueAsString(message);
@@ -98,9 +111,9 @@ public class DataSyncService {
                                                          apnPlatformArn);
 
                 // Send a message to an APN endpoint
-                snsMobile.apnNotification(SNSMobile.Platform.APNS_SANDBOX,
-                                          platformEndpointResult.getEndpointArn(),
-                                          getApnMessage("Gasp! update: review " + review.getId()));
+                snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
+                                           platformEndpointResult.getEndpointArn(),
+                                           getApnMessage("Gasp! update: review " + review.getId()));
 
                 // Delete the APN Platform Application.
                 snsMobile.deletePlatformApplication(apnPlatformArn);
@@ -111,9 +124,13 @@ public class DataSyncService {
                                                           applicationName);
 
                 // Create an GCM App Endpoint.
-               platformEndpointResult = snsMobile.createPlatformEndpoint("Gasp GCM Platform Endpoint",
+                platformEndpointResult = snsMobile.createPlatformEndpoint("Gasp GCM Platform Endpoint",
                                                                          registrationId,
                                                                          gcmPlatformArn);
+
+                snsMobile.pushNotification(SNSMobile.Platform.GCM,
+                                           platformEndpointResult.getEndpointArn(),
+                                           getGcmMessage("Gasp! update: review " + review.getId()));
 
                 // Delete the GCM Platform Application.
                 snsMobile.deletePlatformApplication(gcmPlatformArn);
