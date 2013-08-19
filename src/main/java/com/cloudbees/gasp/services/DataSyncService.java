@@ -18,7 +18,6 @@ package com.cloudbees.gasp.services;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.sns.model.CreatePlatformEndpointResult;
 import com.cloudbees.gasp.model.Restaurant;
 import com.cloudbees.gasp.model.Review;
 import com.cloudbees.gasp.model.User;
@@ -82,36 +81,26 @@ public class DataSyncService {
             LOGGER.info("Syncing Review Id: " + String.valueOf(review.getId()));
 
             //TODO: Retrieve all registered device tokens
-            String deviceToken = APNDataStore.getTokens().get(0);
-            LOGGER.debug("APNS device token: " + deviceToken);
+            String apnEndpointArn = APNDataStore.getTokens().get(0);
+            LOGGER.debug("APN endpoint ARN: " + apnEndpointArn);
 
             //TODO: Retrieve all registration IDs
-            String registrationId = GCMDataStore.getTokens().get(0);
-            LOGGER.debug("GCM Registration ID: " + registrationId);
+            String gcmEndpointArn = GCMDataStore.getTokens().get(0);
+            LOGGER.debug("GCM endpoint ARN: " + gcmEndpointArn);
 
 
 
             try {
                 SNSMobile snsMobile = new SNSMobile();
 
-                // Create an APN App Endpoint.
-                CreatePlatformEndpointResult platformEndpointResult =
-                        snsMobile.createPlatformEndpoint("Gasp APN Platform Endpoint",
-                                                         deviceToken,
-                                                         snsMobile.getApnPlatformArn());
-
-                // Send a message to an APN endpoint
+                // Send message to APN endpoint
                 snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
-                                           platformEndpointResult.getEndpointArn(),
+                                           apnEndpointArn,
                                            getApnMessage("Gasp! update: review " + review.getId()));
 
-                // Create an GCM App Endpoint.
-                platformEndpointResult = snsMobile.createPlatformEndpoint("Gasp GCM Platform Endpoint",
-                                                                          registrationId,
-                                                                          snsMobile.getGcmPlatformArn());
-
+                // Send message to GCM endpoint
                 snsMobile.pushNotification(SNSMobile.Platform.GCM,
-                                           platformEndpointResult.getEndpointArn(),
+                                           gcmEndpointArn,
                                            getGcmMessage("Gasp! update: review " + review.getId()));
 
             } catch (AmazonServiceException ase) {

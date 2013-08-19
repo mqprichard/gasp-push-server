@@ -16,6 +16,9 @@
 
 package com.cloudbees.gasp.services;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.sns.model.CreatePlatformEndpointResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,14 +32,32 @@ import javax.ws.rs.core.Response;
 @Path("/gcm")
 public class GCMRegistrationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(GCMRegistrationService.class.getName());
+    private static SNSMobile snsMobile = new SNSMobile();
 
     @POST
     @Path("register")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doRegister(@FormParam("regId") String regId) {
 
-        //GCMDataStore.register(regId);
-        LOGGER.info("Registered: " + regId);
+        try {
+            CreatePlatformEndpointResult platformEndpointResult =
+                    snsMobile.createPlatformEndpoint("Gasp GCM Platform Endpoint",
+                                                     regId,
+                                                     snsMobile.getGcmPlatformArn());
+
+            GCMDataStore.register(platformEndpointResult.getEndpointArn());
+            LOGGER.info("Registered: " + platformEndpointResult.getEndpointArn());
+        } catch (AmazonServiceException ase) {
+            LOGGER.debug("AmazonServiceException");
+            LOGGER.debug("  Error Message:    " + ase.getMessage());
+            LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
+            LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
+            LOGGER.debug("  Error Type:       " + ase.getErrorType());
+            LOGGER.debug("  Request ID:       " + ase.getRequestId());
+        } catch (AmazonClientException ace) {
+            LOGGER.debug("AmazonClientException");
+            LOGGER.debug("  Error Message: " + ace.getMessage());
+        }
 
         return Response.status(Response.Status.OK).build();
     }
@@ -44,10 +65,10 @@ public class GCMRegistrationService {
     @POST
     @Path("unregister")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response doUnregister(@FormParam("regId") String regId) {
+    public Response doUnregister(@FormParam("regId") String endpointArn) {
 
-        //GCMDataStore.unregister(regId);
-        LOGGER.info("Unregistered: " + regId);
+        GCMDataStore.unregister(endpointArn);
+        LOGGER.info("Unregistered: " + endpointArn);
 
         return Response.status(Response.Status.OK).build();
     }

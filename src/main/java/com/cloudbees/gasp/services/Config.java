@@ -16,6 +16,8 @@
 
 package com.cloudbees.gasp.services;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
@@ -43,10 +45,6 @@ public class Config implements ServletContextListener {
                                                .getClass()
                                                .getClassLoader()
                                                .getResourceAsStream(awsCredentialsFilename);
-
-    //TODO: Remove when registration API is hooked up
-    private static String apnsToken;
-    private static String gcmRegistrationId;
 
     // Apple Development iOS Push Services Certificate and Private Key
     private static String apnsCertificate;
@@ -118,24 +116,6 @@ public class Config implements ServletContextListener {
 
     public void contextInitialized(ServletContextEvent event) {
         try {
-            //TODO: (temporary) get APNS device token for testing from system property
-            //TODO: Devices will register from didRegisterForRemoteNotificationsWithDeviceToken
-            if ((apnsToken = System.getProperty("APNS_TOKEN")) != null) {
-                APNDataStore.register(apnsToken);
-            }
-            else {
-                LOGGER.error("APNS_TOKEN not set");
-            }
-
-            // TODO: (temporary) get GCM registration ID for testing from system property
-            // TODO: Devices will register from onCreate() in the main Activity
-            if ((gcmRegistrationId = System.getProperty("GCM_REGID")) != null) {
-                GCMDataStore.register(gcmRegistrationId);
-            }
-            else {
-                LOGGER.error("GCM_REGID not set");
-            }
-
             if ((gcmApiKey = System.getProperty("GCM_APIKEY")) == null) {
                 LOGGER.error("GCM_APIKEY not set");
             }
@@ -159,28 +139,54 @@ public class Config implements ServletContextListener {
 
             snsMobile.setSnsClient(Config.getAmazonSNS());
 
-            snsMobile.setApnPlatformArn(
-                    snsMobile.getPlatformArn(SNSMobile.Platform.APNS_SANDBOX,
-                            Config.getApnsCertificate(),
-                            Config.getApnsKey(),
-                            applicationName));
+            try {
+                // Create SNS Mobile Platform ARN for APN
+                snsMobile.setApnPlatformArn(
+                        snsMobile.getPlatformArn(SNSMobile.Platform.APNS_SANDBOX,
+                                                 Config.getApnsCertificate(),
+                                                 Config.getApnsKey(),
+                                                 applicationName));
 
-            snsMobile.setGcmPlatformArn(
-                    snsMobile.getPlatformArn(SNSMobile.Platform.GCM,
-                            "",
-                            Config.getGcmApiKey(),
-                            applicationName));
+                // Create SNS Mobile Platform ARN for GCM
+                snsMobile.setGcmPlatformArn(
+                        snsMobile.getPlatformArn(SNSMobile.Platform.GCM,
+                                                 "",
+                                                 Config.getGcmApiKey(),
+                                                 applicationName));
 
+            } catch (AmazonServiceException ase) {
+                LOGGER.debug("AmazonServiceException");
+                LOGGER.debug("  Error Message:    " + ase.getMessage());
+                LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
+                LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
+                LOGGER.debug("  Error Type:       " + ase.getErrorType());
+                LOGGER.debug("  Request ID:       " + ase.getRequestId());
+            } catch (AmazonClientException ace) {
+                LOGGER.debug("AmazonClientException");
+                LOGGER.debug("  Error Message: " + ace.getMessage());
+            }
         }
         catch (Exception e){
             e.printStackTrace();
         }
     }
     public void contextDestroyed(ServletContextEvent event) {
-        // Delete the APN Platform Application.
-        snsMobile.deletePlatformApplication(snsMobile.getApnPlatformArn());
+        try {
+            // Delete the APN Platform Application.
+            snsMobile.deletePlatformApplication(snsMobile.getApnPlatformArn());
 
-        // Delete the GCM Platform Application.
-        snsMobile.deletePlatformApplication(snsMobile.getGcmPlatformArn());
+            // Delete the GCM Platform Application.
+            snsMobile.deletePlatformApplication(snsMobile.getGcmPlatformArn());
+            } catch (AmazonServiceException ase) {
+                LOGGER.debug("AmazonServiceException");
+                LOGGER.debug("  Error Message:    " + ase.getMessage());
+                LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
+                LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
+                LOGGER.debug("  Error Type:       " + ase.getErrorType());
+                LOGGER.debug("  Request ID:       " + ase.getRequestId());
+            } catch (AmazonClientException ace) {
+                LOGGER.debug("AmazonClientException");
+                LOGGER.debug("  Error Message: " + ace.getMessage());
+            }
     }
 }
