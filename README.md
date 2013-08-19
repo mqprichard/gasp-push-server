@@ -38,9 +38,21 @@ Setup
 
 5. Deploy your FoxWeave Integration App on CloudBees and start it
 
-6. Deploy to CloudBees: `bees app:deploy -a gasp-snsmobile-server target/gasp-snsmobile-server.war`
+6. Build the app
+   - Copy your iOS Push Services certificate (in PEM format) to src/main/webapp/WEB-INF/classes/apnsappcert.pem
+   - Copy your iOS Push Services private key (in PEM format) to src/main/webapp/WEB-INF/classes/apnsappkey.pem
+   - Copy your AWS credentials properties file to src/main/webapp/WEB-INF/classes/AwsCredentials.properties
+   - mvn build install
+   - (to test locally) mvn bees:run -DGCM_APIKEY=your_gcm_apikey and use localhost:8080 for all curl commands
 
-7. To test the service: `curl -H "Content-Type:application/json" -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/reviews -d '{ "id":1, "comment":"blank", "star":"three", "restaurant_id":1, "user_id":1 }'`
+6. Deploy to CloudBees:
+   - `bees app:deploy -a gasp-snsmobile-server target/gasp-snsmobile-server.war`
+   - `bees config:set -a gasp-snsmobile-server -P GCM_APIKEY=your_gcm_apikey
+
+7. To test the service:
+   - `curl -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/gcm/register -d 'regId=test_gcm-regid'`
+   - `curl -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/apn/register -d 'token=test_apn_token'`
+   - `curl -H "Content-Type:application/json" -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/reviews -d '{ "id":1, "comment":"blank", "star":"three", "restaurant_id":1, "user_id":1 }'`
 
 
 Viewing the Server Log
