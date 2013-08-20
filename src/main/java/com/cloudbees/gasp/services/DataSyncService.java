@@ -84,7 +84,7 @@ public class DataSyncService {
             }
 
             // Send update to all registered GCM endpoints
-            for (String endpointArn: GCMDataStore.getTokens()) {
+            for (String endpointArn: GCMDataStore.getEndpoints()) {
                 LOGGER.info("Sending update to GCM endpoint ARN: " + endpointArn);
                 snsMobile.pushNotification(SNSMobile.Platform.GCM,
                                            endpointArn,
