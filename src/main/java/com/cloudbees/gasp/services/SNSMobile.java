@@ -133,6 +133,7 @@ public class SNSMobile {
         return snsClient.createPlatformEndpoint(platformEndpointRequest);
     }
 
+    /*
     private String getPlatformSampleMessage(Platform platform) {
         switch (platform) {
             case APNS:
@@ -199,6 +200,7 @@ public class SNSMobile {
         publishRequest.setMessage(message);
         return snsClient.publish(publishRequest);
     }
+    */
 
     public void deletePlatformApplication(String applicationArn) {
         DeletePlatformApplicationRequest request = new DeletePlatformApplicationRequest();
