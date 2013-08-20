@@ -71,6 +71,39 @@ public class DataSyncService {
         }
     }
 
+    private void sendPushNotifications(String messageText) {
+        try {
+            SNSMobile snsMobile = new SNSMobile();
+
+            // Send update to all registered APN endpoints
+            for (String endpointArn: APNDataStore.getTokens() ) {
+                LOGGER.info("Sending update to APN endpoint ARN: " + endpointArn);
+                snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
+                                           endpointArn,
+                                           getApnMessage(messageText));
+            }
+
+            // Send update to all registered GCM endpoints
+            for (String endpointArn: GCMDataStore.getTokens()) {
+                LOGGER.info("Sending update to GCM endpoint ARN: " + endpointArn);
+                snsMobile.pushNotification(SNSMobile.Platform.GCM,
+                                           endpointArn,
+                                           getGcmMessage(messageText));
+            }
+        } catch (AmazonServiceException ase) {
+            LOGGER.debug("AmazonServiceException");
+            LOGGER.debug("  Error Message:    " + ase.getMessage());
+            LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
+            LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
+            LOGGER.debug("  Error Type:       " + ase.getErrorType());
+            LOGGER.debug("  Request ID:       " + ase.getRequestId());
+        } catch (AmazonClientException ace) {
+            LOGGER.debug("AmazonClientException");
+            LOGGER.debug("  Error Message: " + ace.getMessage());
+        } catch (Exception e) {
+            return;
+        }
+    }
 
     @POST
     @Path("/reviews")
@@ -80,37 +113,10 @@ public class DataSyncService {
             Review review = new Gson().fromJson(jsonInput, Review.class);
             LOGGER.info("Syncing Review Id: " + String.valueOf(review.getId()));
 
-            try {
-                SNSMobile snsMobile = new SNSMobile();
-
-                // Send update to all registered APN endpoints
-                for (String endpointArn: APNDataStore.getTokens() ) {
-                    LOGGER.info("Sending update to APN endpoint ARN: " + endpointArn);
-                    snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
-                                               endpointArn,
-                                               getApnMessage("Gasp! update: review " + review.getId()));
-                }
-
-                // Send update to all registered GCM endpoints
-                for (String endpointArn: GCMDataStore.getTokens()) {
-                    LOGGER.info("Sending update to GCM endpoint ARN: " + endpointArn);
-                    snsMobile.pushNotification(SNSMobile.Platform.GCM,
-                                               endpointArn,
-                                               getGcmMessage("Gasp! update: review " + review.getId()));
-                }
-
-            } catch (AmazonServiceException ase) {
-                LOGGER.debug("AmazonServiceException");
-                LOGGER.debug("  Error Message:    " + ase.getMessage());
-                LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
-                LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
-                LOGGER.debug("  Error Type:       " + ase.getErrorType());
-                LOGGER.debug("  Request ID:       " + ase.getRequestId());
-            } catch (AmazonClientException ace) {
-                LOGGER.debug("AmazonClientException");
-                LOGGER.debug("  Error Message: " + ace.getMessage());
-            }
-        } catch (Exception e) {
+            // Send push notifications to all registered devices
+            sendPushNotifications("Gasp! update: reviews/" + review.getId());
+        }
+        catch (Exception e) {
             return;
         }
     }
@@ -123,9 +129,10 @@ public class DataSyncService {
             Restaurant restaurant = new Gson().fromJson(jsonInput, Restaurant.class);
             LOGGER.info("Syncing Restaurant Id: " + String.valueOf(restaurant.getId()));
 
-            //TODO: Move APN/GCM update into separate function and include here
-
-        } catch (Exception e) {
+            // Send push notifications to all registered devices
+            sendPushNotifications("Gasp! update: restaurants/" + restaurant.getId());
+        }
+        catch (Exception e) {
             return;
         }
     }
@@ -138,9 +145,10 @@ public class DataSyncService {
             User user = new Gson().fromJson(jsonInput, User.class);
             LOGGER.info("Syncing User Id: " + String.valueOf(user.getId()));
 
-            //TODO: Move APN/GCM update into separate function and include here
-
-        } catch (Exception e) {
+            // Send push notifications to all registered devices
+            sendPushNotifications("Gasp! update: users/" + user.getId());
+        }
+        catch (Exception e) {
             return;
         }
     }

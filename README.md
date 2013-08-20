@@ -57,4 +57,6 @@ Setup
 Viewing the Server Log
 ----------------------
 
-You can view the server log using `bees app:tail -a gasp-snsmobile-server` 
+You can view the server log using `bees app:tail -a gasp-snsmobile-server`
+
+
