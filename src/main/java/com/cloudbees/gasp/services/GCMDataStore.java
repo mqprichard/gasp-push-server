@@ -33,28 +33,20 @@ import java.util.Map;
  */
 public final class GCMDataStore {
 
-  private static final List<String> endpoints = new ArrayList<String>();
-  private static final Map<String, String> tokenMap = new HashMap<String, String>();
-  private static final Logger LOGGER = LoggerFactory.getLogger(GCMDataStore.class.getName());
+    private static final List<String> endpoints = new ArrayList<String>();
+    private static final Map<String, String> tokenMap = new HashMap<String, String>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(GCMDataStore.class.getName());
 
-  private GCMDataStore() {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Registers a device.
-   */
-  public static void register(String endpoint) {
-    LOGGER.debug("Registering " + endpoint);
-    synchronized (endpoints) {
-      endpoints.add(endpoint);
+    private GCMDataStore() {
+        throw new UnsupportedOperationException();
     }
-  }
 
+    /**
+     * Registers a device.
+     */
     public static void registerArn(String regId, String endpointArn) {
-        LOGGER.debug("Registering Id: " + regId + "with endpoint Arn: " + endpointArn);
+        LOGGER.debug("Registering Id: " + regId + " with endpoint Arn: " + endpointArn);
 
-        //Add endpoint Arn and token-Arn mapping
         synchronized (endpoints) {
             endpoints.add(endpointArn);
         }
@@ -63,21 +55,13 @@ public final class GCMDataStore {
         }
     }
 
-  /**
-   * Unregisters a device.
-   */
-  public static void unregister(String endpoint) {
-    LOGGER.debug("Unregistering " + endpoint);
-    synchronized (endpoints) {
-      endpoints.remove(endpoint);
-    }
-  }
-
+    /**
+     * Unregisters a device.
+     */
     public static void unregisterArn(String regId) {
         String endpointArn = tokenMap.get(regId);
-        LOGGER.info("Unregistering device token: " + regId + "with endpoint Arn: " + endpointArn);
+        LOGGER.info("Unregistering Id: " + regId + " with endpoint Arn: " + endpointArn);
 
-        //Remove endpoint Arn and token-Arn mapping
         synchronized (endpoints) {
             endpoints.remove(endpointArn);
         }
@@ -86,12 +70,12 @@ public final class GCMDataStore {
         }
     }
 
-  /**
-   * Gets all registered devices.
-   */
-  public static List<String> getEndpoints() {
-    synchronized (endpoints) {
-      return new ArrayList<String>(endpoints);
+    /**
+     * Gets all registered devices.
+     */
+    public static List<String> getEndpoints() {
+        synchronized (endpoints) {
+            return new ArrayList<String>(endpoints);
+        }
     }
-  }
 }

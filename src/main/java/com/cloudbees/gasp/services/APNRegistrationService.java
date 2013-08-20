@@ -45,7 +45,6 @@ public class APNRegistrationService {
                                                      token,
                                                      snsMobile.getApnPlatformArn());
 
-            //APNDataStore.register(platformEndpointResult.getEndpointArn());
             APNDataStore.registerArn(token, platformEndpointResult.getEndpointArn());
             LOGGER.info("Registered: " + platformEndpointResult.getEndpointArn());
 
@@ -69,7 +68,6 @@ public class APNRegistrationService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doUnregister(@FormParam("token") String token) {
 
-        //APNDataStore.unregister(endpointArn);
         APNDataStore.unregisterArn(token);
         LOGGER.info("Unregistered: " + token);
 

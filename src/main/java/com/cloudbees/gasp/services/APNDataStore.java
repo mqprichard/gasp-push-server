@@ -33,65 +33,49 @@ import java.util.Map;
  */
 public final class APNDataStore {
 
-  private static final List<String> endpoints = new ArrayList<String>();
-  private static final Map<String, String> tokenMap = new HashMap<String, String>();
-  private static final Logger LOGGER = LoggerFactory.getLogger(APNDataStore.class.getName());
+    private static final List<String> endpoints = new ArrayList<String>();
+    private static final Map<String, String> tokenMap = new HashMap<String, String>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(APNDataStore.class.getName());
 
-  private APNDataStore() {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Registers a device.
-   */
-  public static void register(String endpoint) {
-    LOGGER.debug("Registering " + endpoint);
-    synchronized (endpoints) {
-      endpoints.add(endpoint);
+    private APNDataStore() {
+        throw new UnsupportedOperationException();
     }
-  }
 
-  public static void registerArn(String deviceToken, String endpointArn) {
-      LOGGER.debug("Registering device token: " + deviceToken + "with endpoint Arn: " + endpointArn);
+    /**
+     * Registers a device.
+     */
+    public static void registerArn(String deviceToken, String endpointArn) {
+        LOGGER.debug("Registering device token: " + deviceToken + "with endpoint Arn: " + endpointArn);
 
-      //Add endpoint Arn and token-Arn mapping
-      synchronized (endpoints) {
-        endpoints.add(endpointArn);
-      }
-      synchronized (tokenMap) {
-        tokenMap.put(deviceToken, endpointArn);
-      }
-  }
-
-  /**
-   * Unregisters a device.
-   */
-  public static void unregister(String endpoint) {
-    LOGGER.debug("Unregistering " + endpoint);
-    synchronized (endpoints) {
-      endpoints.remove(endpoint);
+        synchronized (endpoints) {
+            endpoints.add(endpointArn);
+        }
+        synchronized (tokenMap) {
+            tokenMap.put(deviceToken, endpointArn);
+        }
     }
-  }
 
-  public static void unregisterArn(String deviceToken) {
-      String endpointArn = tokenMap.get(deviceToken);
-      LOGGER.info("Unregistering device token: " + deviceToken + "with endpoint Arn: " + endpointArn);
+    /**
+     * Unregisters a device.
+     */
+    public static void unregisterArn(String deviceToken) {
+        String endpointArn = tokenMap.get(deviceToken);
+        LOGGER.info("Unregistering device token: " + deviceToken + "with endpoint Arn: " + endpointArn);
 
-      //Remove endpoint Arn and token-Arn mapping
-      synchronized (endpoints) {
-          endpoints.remove(endpointArn);
-      }
-      synchronized (tokenMap) {
-          tokenMap.remove(deviceToken);
-      }
-  }
-
-  /**
-   * Gets all registered devices.
-   */
-  public static List<String> getEndpoints() {
-    synchronized (endpoints) {
-      return new ArrayList<String>(endpoints);
+        synchronized (endpoints) {
+            endpoints.remove(endpointArn);
+        }
+        synchronized (tokenMap) {
+            tokenMap.remove(deviceToken);
+        }
     }
-  }
+
+    /**
+     * Gets all registered devices.
+     */
+    public static List<String> getEndpoints() {
+        synchronized (endpoints) {
+            return new ArrayList<String>(endpoints);
+        }
+    }
 }

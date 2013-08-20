@@ -45,8 +45,9 @@ public class GCMRegistrationService {
                                                      regId,
                                                      snsMobile.getGcmPlatformArn());
 
-            GCMDataStore.register(platformEndpointResult.getEndpointArn());
+            GCMDataStore.registerArn(regId, platformEndpointResult.getEndpointArn());
             LOGGER.info("Registered: " + platformEndpointResult.getEndpointArn());
+
         } catch (AmazonServiceException ase) {
             LOGGER.debug("AmazonServiceException");
             LOGGER.debug("  Error Message:    " + ase.getMessage());
@@ -65,10 +66,10 @@ public class GCMRegistrationService {
     @POST
     @Path("unregister")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response doUnregister(@FormParam("regId") String endpointArn) {
+    public Response doUnregister(@FormParam("regId") String regId) {
 
-        GCMDataStore.unregister(endpointArn);
-        LOGGER.info("Unregistered: " + endpointArn);
+        GCMDataStore.unregisterArn(regId);
+        LOGGER.info("Unregistered: " + regId);
 
         return Response.status(Response.Status.OK).build();
     }
