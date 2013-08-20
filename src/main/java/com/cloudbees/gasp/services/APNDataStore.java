@@ -60,7 +60,7 @@ public final class APNDataStore {
      */
     public static void unregisterArn(String deviceToken) {
         String endpointArn = tokenMap.get(deviceToken);
-        LOGGER.info("Unregistering device token: " + deviceToken + "with endpoint Arn: " + endpointArn);
+        LOGGER.debug("Unregistering device token: " + deviceToken + "with endpoint Arn: " + endpointArn);
 
         synchronized (endpoints) {
             endpoints.remove(endpointArn);

@@ -60,7 +60,7 @@ public final class GCMDataStore {
      */
     public static void unregisterArn(String regId) {
         String endpointArn = tokenMap.get(regId);
-        LOGGER.info("Unregistering Id: " + regId + " with endpoint Arn: " + endpointArn);
+        LOGGER.debug("Unregistering Id: " + regId + " with endpoint Arn: " + endpointArn);
 
         synchronized (endpoints) {
             endpoints.remove(endpointArn);
