@@ -76,7 +76,7 @@ public class DataSyncService {
             SNSMobile snsMobile = new SNSMobile();
 
             // Send update to all registered APN endpoints
-            for (String endpointArn: APNDataStore.getTokens() ) {
+            for (String endpointArn: APNDataStore.getEndpoints() ) {
                 LOGGER.info("Sending update to APN endpoint ARN: " + endpointArn);
                 snsMobile.pushNotification(SNSMobile.Platform.APNS_SANDBOX,
                                            endpointArn,

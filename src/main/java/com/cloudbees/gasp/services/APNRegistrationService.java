@@ -45,8 +45,10 @@ public class APNRegistrationService {
                                                      token,
                                                      snsMobile.getApnPlatformArn());
 
-            APNDataStore.register(platformEndpointResult.getEndpointArn());
+            //APNDataStore.register(platformEndpointResult.getEndpointArn());
+            APNDataStore.registerArn(token, platformEndpointResult.getEndpointArn());
             LOGGER.info("Registered: " + platformEndpointResult.getEndpointArn());
+
         } catch (AmazonServiceException ase) {
             LOGGER.debug("AmazonServiceException");
             LOGGER.debug("  Error Message:    " + ase.getMessage());
@@ -65,10 +67,11 @@ public class APNRegistrationService {
     @POST
     @Path("unregister")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response doUnregister(@FormParam("token") String endpointArn) {
+    public Response doUnregister(@FormParam("token") String token) {
 
-        APNDataStore.unregister(endpointArn);
-        LOGGER.info("Unregistered: " + endpointArn);
+        //APNDataStore.unregister(endpointArn);
+        APNDataStore.unregisterArn(token);
+        LOGGER.info("Unregistered: " + token);
 
         return Response.status(Response.Status.OK).build();
     }
