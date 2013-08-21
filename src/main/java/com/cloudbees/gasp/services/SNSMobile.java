@@ -133,79 +133,16 @@ public class SNSMobile {
         return snsClient.createPlatformEndpoint(platformEndpointRequest);
     }
 
-    /*
-    private String getPlatformSampleMessage(Platform platform) {
-        switch (platform) {
-            case APNS:
-                return getSampleAppleMessage();
-            case APNS_SANDBOX:
-                return getSampleAppleMessage();
-            case GCM:
-                return getSampleAndroidMessage();
-            case ADM:
-                return getSampleKindleMessage();
-            default:
-                throw new IllegalArgumentException("Platform Not supported : " + platform.name());
-        }
-    }
-
-    private String getSampleAppleMessage() {
-        Map<String, Object> appleMessageMap = new HashMap<String, Object>();
-        Map<String, Object> appMessageMap = new HashMap<String, Object>();
-        appMessageMap.put("alert", "You have a Gasp! update");
-        appMessageMap.put("badge", 1);
-        appMessageMap.put("sound", "default");
-        appleMessageMap.put("aps", appMessageMap);
-        return jsonify(appleMessageMap);
-    }
-
-    private String getSampleKindleMessage() {
-        Map<String, Object> kindleMessageMap = new HashMap<String, Object>();
-        kindleMessageMap.put("data", getData());
-        kindleMessageMap.put("consolidationKey", "Welcome");
-        kindleMessageMap.put("expiresAfter", 1000);
-        return jsonify(kindleMessageMap);
-    }
-
-    private String getSampleAndroidMessage() {
-        Map<String, Object> androidMessageMap = new HashMap<String, Object>();
-        androidMessageMap.put("collapse_key", "Welcome");
-        androidMessageMap.put("data", getData());
-        androidMessageMap.put("delay_while_idle", true);
-        androidMessageMap.put("time_to_live", 125);
-        androidMessageMap.put("dry_run", false);
-        return jsonify(androidMessageMap);
-    }
-
-    private Map<String, String> getData() {
-        Map<String, String> payload = new HashMap<String, String>();
-        payload.put("message", "Hello World!");
-        return payload;
-    }
-
-    private PublishResult publish(String endpointArn, Platform platform) {
-        PublishRequest publishRequest = new PublishRequest();
-        Map<String, String> messageMap = new HashMap<String, String>();
-        String message;
-        messageMap.put("default", defaultMessage);
-        messageMap.put(platform.name(), getPlatformSampleMessage(platform));
-        // For direct publish to mobile end points, topicArn is not relevant.
-        publishRequest.setTargetArn(endpointArn);
-        publishRequest.setMessageStructure("json");
-        message = jsonify(messageMap);
-
-        // Display the message that will be sent to the endpoint/
-        LOGGER.debug(message);
-
-        publishRequest.setMessage(message);
-        return snsClient.publish(publishRequest);
-    }
-    */
-
     public void deletePlatformApplication(String applicationArn) {
         DeletePlatformApplicationRequest request = new DeletePlatformApplicationRequest();
         request.setPlatformApplicationArn(applicationArn);
         snsClient.deletePlatformApplication(request);
+    }
+
+    public void deleteEndpointArn (String endpointArn){
+        DeleteEndpointRequest request = new DeleteEndpointRequest();
+        request.setEndpointArn(endpointArn);
+        snsClient.deleteEndpoint(request);
     }
 
     private static String jsonify(Object message) {

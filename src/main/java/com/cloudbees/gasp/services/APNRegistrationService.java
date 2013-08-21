@@ -39,7 +39,7 @@ public class APNRegistrationService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doRegister(@FormParam("token") String token) {
         try {
-            // Create an APN App Endpoint.
+            // Create an SNS app endpoint
             CreatePlatformEndpointResult platformEndpointResult =
                     snsMobile.createPlatformEndpoint("Gasp APN Platform Endpoint",
                                                      token,
@@ -67,9 +67,25 @@ public class APNRegistrationService {
     @Path("unregister")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doUnregister(@FormParam("token") String token) {
+        try {
+            // Delete the SNS app endpoint
+            snsMobile.deleteEndpointArn(APNDataStore.getEndpointArn(token));
+            LOGGER.info("Deleted endpoint: " + APNDataStore.getEndpointArn(token));
 
-        APNDataStore.unregisterArn(token);
-        LOGGER.info("Unregistered: " + token);
+            APNDataStore.unregisterArn(token);
+            LOGGER.info("Unregistered device: " + token);
+
+        } catch (AmazonServiceException ase) {
+            LOGGER.debug("AmazonServiceException");
+            LOGGER.debug("  Error Message:    " + ase.getMessage());
+            LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
+            LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
+            LOGGER.debug("  Error Type:       " + ase.getErrorType());
+            LOGGER.debug("  Request ID:       " + ase.getRequestId());
+        } catch (AmazonClientException ace) {
+            LOGGER.debug("AmazonClientException");
+            LOGGER.debug("  Error Message: " + ace.getMessage());
+        }
 
         return Response.status(Response.Status.OK).build();
     }

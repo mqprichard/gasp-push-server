@@ -67,9 +67,25 @@ public class GCMRegistrationService {
     @Path("unregister")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response doUnregister(@FormParam("regId") String regId) {
+        try {
+            // Delete the SNS app endpoint
+            snsMobile.deleteEndpointArn(GCMDataStore.getEndpointArn(regId));
+            LOGGER.info("Deleted endpoint: " + GCMDataStore.getEndpointArn(regId));
 
-        GCMDataStore.unregisterArn(regId);
-        LOGGER.info("Unregistered: " + regId);
+            GCMDataStore.unregisterArn(regId);
+            LOGGER.info("Unregistered device: " + regId);
+
+        } catch (AmazonServiceException ase) {
+            LOGGER.debug("AmazonServiceException");
+            LOGGER.debug("  Error Message:    " + ase.getMessage());
+            LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
+            LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
+            LOGGER.debug("  Error Type:       " + ase.getErrorType());
+            LOGGER.debug("  Request ID:       " + ase.getRequestId());
+        } catch (AmazonClientException ace) {
+            LOGGER.debug("AmazonClientException");
+            LOGGER.debug("  Error Message: " + ace.getMessage());
+        }
 
         return Response.status(Response.Status.OK).build();
     }

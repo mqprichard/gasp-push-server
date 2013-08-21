@@ -79,4 +79,11 @@ public final class GCMDataStore {
             return new ArrayList<String>(endpoints);
         }
     }
+
+    /**
+     * Gets the endpoint Arn for a given device Id
+     */
+    public static String getEndpointArn(String regId) {
+        return tokenMap.get(regId);
+    }
 }

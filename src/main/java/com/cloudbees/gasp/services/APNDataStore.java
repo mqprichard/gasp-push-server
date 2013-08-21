@@ -79,4 +79,11 @@ public final class APNDataStore {
             return new ArrayList<String>(endpoints);
         }
     }
+
+    /**
+     * Gets the endpoint Arn for a given device token
+     */
+    public static String getEndpointArn(String deviceToken) {
+        return tokenMap.get(deviceToken);
+    }
 }
