@@ -30,6 +30,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -108,7 +109,7 @@ public class DataSyncService {
     @POST
     @Path("/reviews")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void reviewUpdateReceived(String jsonInput) {
+    public Response reviewUpdateReceived(String jsonInput) {
         try {
             Review review = new Gson().fromJson(jsonInput, Review.class);
             LOGGER.info("Syncing Review Id: " + String.valueOf(review.getId()));
@@ -117,14 +118,16 @@ public class DataSyncService {
             sendPushNotifications("Gasp! update: reviews/" + review.getId());
         }
         catch (Exception e) {
-            return;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+
+        return Response.status(Response.Status.OK).build();
     }
 
     @POST
     @Path("/restaurants")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void restaurantUpdateReceived(String jsonInput) {
+    public Response restaurantUpdateReceived(String jsonInput) {
         try {
             Restaurant restaurant = new Gson().fromJson(jsonInput, Restaurant.class);
             LOGGER.info("Syncing Restaurant Id: " + String.valueOf(restaurant.getId()));
@@ -133,14 +136,16 @@ public class DataSyncService {
             sendPushNotifications("Gasp! update: restaurants/" + restaurant.getId());
         }
         catch (Exception e) {
-            return;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+
+        return Response.status(Response.Status.OK).build();
     }
 
     @POST
     @Path("/users")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void userUpdateReceived(String jsonInput) {
+    public Response userUpdateReceived(String jsonInput) {
         try {
             User user = new Gson().fromJson(jsonInput, User.class);
             LOGGER.info("Syncing User Id: " + String.valueOf(user.getId()));
@@ -149,7 +154,9 @@ public class DataSyncService {
             sendPushNotifications("Gasp! update: users/" + user.getId());
         }
         catch (Exception e) {
-            return;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+
+        return Response.status(Response.Status.OK).build();
     }
 }
