@@ -59,4 +59,20 @@ Viewing the Server Log
 
 You can view the server log using `bees app:tail -a gasp-snsmobile-server`
 
+You should see messages similar to these in the server log:
 
+`INFO  Config - Created APN Platform ARN: arn:aws:sns:us-east-1:993998836540:app/APNS_SANDBOX/gasp-snsmobile-service`
+`INFO  Config - Created GCM platform ARN: arn:aws:sns:us-east-1:993998836540:app/GCM/gasp-snsmobile-service`
+
+...
+
+`INFO  APNRegistrationService - Registered: arn:aws:sns:us-east-1:993998836540:endpoint/APNS_SANDBOX/gasp-snsmobile-service/72ba92af-4ae8-3c91-84c9-6463a1a274ae`
+`INFO  GCMRegistrationService - Registered: arn:aws:sns:us-east-1:993998836540:endpoint/GCM/gasp-snsmobile-service/0c620536-461e-3b03-98a1-1972ca718767`
+`INFO  DataSyncService - Syncing Review Id: 1`
+`INFO  DataSyncService - Sending update to APN endpoint ARN: arn:aws:sns:us-east-1:993998836540:endpoint/APNS_SANDBOX/gasp-snsmobile-service/72ba92af-4ae8-3c91-84c9-6463a1a274ae`
+`INFO  DataSyncService - Sending update to GCM endpoint ARN: arn:aws:sns:us-east-1:993998836540:endpoint/GCM/gasp-snsmobile-service/0c620536-461e-3b03-98a1-1972ca718767`
+
+...
+
+`INFO  Config - Deleted APN platform ARN: arn:aws:sns:us-east-1:993998836540:app/APNS_SANDBOX/gasp-snsmobile-service`
+`INFO  Config - Deleted GCM platform ARN: arn:aws:sns:us-east-1:993998836540:app/GCM/gasp-snsmobile-service`
