@@ -55,9 +55,11 @@ public class APNRegistrationService {
             LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
             LOGGER.debug("  Error Type:       " + ase.getErrorType());
             LOGGER.debug("  Request ID:       " + ase.getRequestId());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } catch (AmazonClientException ace) {
             LOGGER.debug("AmazonClientException");
             LOGGER.debug("  Error Message: " + ace.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
         return Response.status(Response.Status.OK).build();
@@ -82,9 +84,11 @@ public class APNRegistrationService {
             LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
             LOGGER.debug("  Error Type:       " + ase.getErrorType());
             LOGGER.debug("  Request ID:       " + ase.getRequestId());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         } catch (AmazonClientException ace) {
             LOGGER.debug("AmazonClientException");
             LOGGER.debug("  Error Message: " + ace.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
 
         return Response.status(Response.Status.OK).build();
