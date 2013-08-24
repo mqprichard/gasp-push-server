@@ -36,8 +36,8 @@ public class Config implements ServletContextListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class.getName());
 
     // APN Cert/Key PEM filenames: read via ClassLoader
-    private static final String apnsCertFilename = "apnsappcert.pem";
-    private static final String apnsKeyFilename = "apnsappkey.pem";
+    private static final String apnsCertFilename = "gasp-cert.pem";
+    private static final String apnsKeyFilename = "gasp-key.pem";
 
     // AWS Credentials properties file: read via ClassLoader
     private static final String awsCredentialsFilename = "AwsCredentials.properties";
