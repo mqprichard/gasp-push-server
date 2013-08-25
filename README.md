@@ -32,7 +32,7 @@ Setup
 
 4. Convert the iOS Push Services SSL certificate and private key in PEM format
    - NOTE: the App ID used for the SSL certificate must match the bundle identifier of the client app project
-   - Export the iOS Push Services SSL certificate (gasp-cert.p12) and private key (gasp-key.p12) from Keychain
+   - Export the iOS Push Services SSL certificate (gasp-cert.p12) and private key (gasp-key.p12) from Keychain Access
    - `openssl pkcs12 -clcerts -nokeys -out gasp-cert-headers.pem -in gasp-cert.p12`
    - `openssl pkcs12 -nocerts -nodes -out gasp-key-headers.pem -in gasp-key.p12`
    - Remove bag attribute headers from both PEM files and rename to gasp-key.pem and gasp-cert.pem
