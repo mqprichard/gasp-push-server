@@ -30,25 +30,32 @@ Setup
    - This [tutorial](http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tutorial-part-1) explains the steps
    - Create the provisioning profile and certificate using the [iOS Developer Portal](https://developer.apple.com/devcenter/ios/index.action)
 
-4. Configure Google APIs for Google Cloud Messaging
+4. Convert the iOS Push Services SSL certificate and private key in PEM format
+   - NOTE: the App ID used for the SSL certificate must match the bundle identifier of the client app project
+   - Export the iOS Push Services SSL certificate (gasp-cert.p12) and private key (gasp-key.p12) from Keychain
+   - `openssl pkcs12 -clcerts -nokeys -out gasp-cert-headers.pem -in gasp-cert.p12`
+   - `openssl pkcs12 -nocerts -nodes -out gasp-key-headers.pem -in gasp-key.p12`
+   - Remove bag attribute headers from both PEM files and rename to gasp-key.pem and gasp-cert.pem
+
+5. Configure Google APIs for Google Cloud Messaging
    - Logon to [Google APIs Console](https://code.google.com/apis/console)
    - Services -> Google Cloud Messaging for Android = ON
    - API Access -> Simple API Access -> Key for server apps (note API Key)
    - Overview (note 12-digit Project Number for Android client)
 
-5. Deploy your FoxWeave Integration App on CloudBees and start it
+6. Deploy your FoxWeave Integration App on CloudBees and start it
 
-6. Build the app
-   - Copy your iOS Push Services certificate (in PEM format) to src/main/webapp/WEB-INF/classes/apnsappcert.pem
-   - Copy your iOS Push Services private key (in PEM format) to src/main/webapp/WEB-INF/classes/apnsappkey.pem
+7. Build the app
+   - Copy your iOS Push Services certificate (in PEM format) to src/main/webapp/WEB-INF/classes/gasp-cert.pem
+   - Copy your iOS Push Services private key (in PEM format) to src/main/webapp/WEB-INF/classes/gasp-key.pem
    - Copy your AWS credentials properties file to src/main/webapp/WEB-INF/classes/AwsCredentials.properties
    - `mvn build install`
    - (to test locally) `mvn bees:run -DGCM_APIKEY=your_gcm_apikey` and use localhost:8080 for all curl commands
 
-6. Deploy to CloudBees:
+8. Deploy to CloudBees:
    - `bees app:deploy -a gasp-snsmobile-server -P GCM_APIKEY=your_gcm_apikey target/gasp-snsmobile-server.war`
 
-7. To test the service:
+9. To test the service:
    - `curl -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/gcm/register -d 'regId=test_gcm-regid'`
    - `curl -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/apn/register -d 'token=test_apn_token'`
    - `curl -H "Content-Type:application/json" -X POST http://gasp-snsmobile-server.partnerdemo.cloudbees.net/reviews -d '{ "id":1, "comment":"blank", "star":"three", "restaurant_id":1, "user_id":1 }'`
