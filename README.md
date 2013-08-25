@@ -46,9 +46,9 @@ Setup
 6. Deploy your FoxWeave Integration App on CloudBees and start it
 
 7. Build the app
-   - Copy your iOS Push Services certificate (in PEM format) to src/main/webapp/WEB-INF/classes/gasp-cert.pem
-   - Copy your iOS Push Services private key (in PEM format) to src/main/webapp/WEB-INF/classes/gasp-key.pem
-   - Copy your AWS credentials properties file to src/main/webapp/WEB-INF/classes/AwsCredentials.properties
+   - Copy your iOS Push Services certificate (in PEM format) to `src/main/webapp/WEB-INF/classes/gasp-cert.pem`
+   - Copy your iOS Push Services private key (in PEM format) to `src/main/webapp/WEB-INF/classes/gasp-key.pem`
+   - Copy your AWS credentials properties file to `src/main/webapp/WEB-INF/classes/AwsCredentials.properties`
    - `mvn build install`
    - (to test locally) `mvn bees:run -DGCM_APIKEY=your_gcm_apikey` and use localhost:8080 for all curl commands
 
