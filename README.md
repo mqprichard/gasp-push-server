@@ -30,7 +30,7 @@ Setup
    - This [tutorial](http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tutorial-part-1) explains the steps
    - Create the provisioning profile and certificate using the [iOS Developer Portal](https://developer.apple.com/devcenter/ios/index.action)
 
-4. Convert the iOS Push Services SSL certificate and private key in PEM format
+4. Convert the iOS Push Services SSL certificate and private key to PEM format
    - NOTE: the App ID used for the SSL certificate must match the bundle identifier of the client app project
    - Export the iOS Push Services SSL certificate (gasp-cert.p12) and private key (gasp-key.p12) from Keychain Access
    - `openssl pkcs12 -clcerts -nokeys -out gasp-cert-headers.pem -in gasp-cert.p12`
