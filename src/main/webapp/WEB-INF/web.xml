@@ -19,7 +19,7 @@
      see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html#d4e194 -->
 <web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
     <servlet>
-        <servlet-name>Gasp GCM Server</servlet-name>
+        <servlet-name>Gasp Push Notification Server</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
@@ -28,7 +28,7 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
-        <servlet-name>Gasp GCM Server</servlet-name>
+        <servlet-name>Gasp Push Notification Server</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
     <listener>

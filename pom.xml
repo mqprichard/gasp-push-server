@@ -18,12 +18,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.cloudbees</groupId>
-    <artifactId>gasp-snsmobile-server</artifactId>
+    <artifactId>gasp-push-server</artifactId>
     <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>gasp-snsmobile-server</name>
+    <name>gasp-push-server</name>
     <build>
-        <finalName>gasp-snsmobile-server</finalName>
+        <finalName>gasp-push-server</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
