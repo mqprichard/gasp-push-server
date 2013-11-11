@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * | Field   | Type         | Null | Key | Default | Extra          |
  * +---------+--------------+------+-----+---------+----------------+
  * | id      | int(11)      | NO   | PRI | NULL    | auto_increment |
- * | address | varchar(255) | YES  |     | NULL    |                |
+ * | placesId | varchar(255) | YES  |     | NULL    |                |
  * | name    | varchar(255) | YES  |     | NULL    |                |
  * | website | varchar(255) | YES  |     | NULL    |                |
  * +---------+--------------+------+-----+---------+----------------+
@@ -38,7 +38,7 @@ public class Restaurant {
     private int id;
     private String name;
     private String website;
-    private String address;
+    private String placesId;
 
     public int getId() {
         return id;
@@ -64,11 +64,11 @@ public class Restaurant {
         this.website = website;
     }
 
-    public String getAddress() {
-        return address;
+    public String getPlacesId() {
+        return placesId;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setPlacesId(String placesId) {
+        this.placesId = placesId;
     }
 }
