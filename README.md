@@ -3,6 +3,11 @@ Gasp! Amazon SNS Mobile Push Server
 
 Push data synchronization server for Gasp! demo: uses CloudBees PaaS and Foxweave to provide automatic data sync between the Gasp! server database and native iOS/Android data stores. This demo uses [Amazon SNS Mobile Push](http://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html) services to send push notifications: it supports both Google Cloud Messaging (for Android) and Apple Push Notification (for iOS).
 
+> <img src="http://www.cloudbees.com/sites/all/themes/custom/cloudbees_zen/css/bidesign/_ui/images/logo.png"/>
+>
+> <b>Note</b>: <i>This repo is part of the Gasp demo project - a showcase of <a href="https://developer.cloudbees.com/bin/view/Mobile">cloudbees mobile services</a>.
+> You can see the big picture of the <a href="http://mobilepaas.cloudbees.com">showcase here</a>.
+> Feel free to fork and use this repo as a template.</i>
 
 Setup
 -----
