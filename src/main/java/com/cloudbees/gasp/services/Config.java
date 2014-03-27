@@ -116,8 +116,19 @@ public class Config implements ServletContextListener {
 
     public void contextInitialized(ServletContextEvent event) {
         try {
-            if ((gcmApiKey = System.getProperty("GCM_APIKEY")) == null) {
-                LOGGER.error("GCM_APIKEY not set");
+            // 1. System property
+            if ((gcmApiKey = System.getProperty("GCM_API_KEY")) != null) {
+                LOGGER.debug("GCM_API_KEY (from system property): " + gcmApiKey);
+            }
+
+            // 2. System environment
+            else if ((gcmApiKey = System.getenv("GCM_API_KEY")) != null){
+                LOGGER.debug("GCM_API_KEY (from system environment): " + gcmApiKey);
+            }
+
+            // Error: GCM_API_KEY not set
+            else {
+                LOGGER.error("GCM_API_KEY not set");
             }
 
             // Read APN iOS Push Service Certificate from ClassLoader
