@@ -38,8 +38,6 @@ import java.util.Map;
 public class DataSyncService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSyncService.class.getName());
 
-    private static final Config config = new Config();
-
     private String getApnMessage(String msg) {
         Map<String, Object> appleMessageMap = new HashMap<String, Object>();
         Map<String, Object> appMessageMap = new HashMap<String, Object>();

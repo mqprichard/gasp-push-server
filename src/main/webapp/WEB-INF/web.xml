@@ -32,6 +32,6 @@
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
     <listener>
-        <listener-class>com.cloudbees.gasp.services.Config</listener-class>
+        <listener-class>com.cloudbees.gasp.PushServlet</listener-class>
     </listener>
 </web-app>

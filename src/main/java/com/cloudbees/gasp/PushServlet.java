@@ -1,39 +1,50 @@
-/*
- * Copyright (c) 2013 Mark Prichard, CloudBees
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package com.cloudbees.gasp.services;
+package com.cloudbees.gasp;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
+import com.cloudbees.gasp.services.DataSyncService;
+import com.cloudbees.gasp.services.GCMRegistrationService;
+import com.cloudbees.gasp.services.SNSMobile;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.servlet.GuiceServletContextListener;
+import com.sun.jersey.guice.JerseyServletModule;
+import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class Config implements ServletContextListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.class.getName());
+
+/**
+ * User: Mark Prichard (mprichard@cloudbees.com))
+ * Date: 3/27/14
+ */
+public class PushServlet extends GuiceServletContextListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PushServlet.class.getName());
+
+    @Override
+    protected Injector getInjector() {
+        return Guice.createInjector(
+            new JerseyServletModule() {
+                @Override
+                protected void configureServlets() {
+                    bind(GCMRegistrationService.class);
+                    bind(DataSyncService.class);
+
+                    serve("/*").with(GuiceContainer.class);
+                }
+            }
+        );
+    }
 
     // APN Cert/Key PEM filenames: read via ClassLoader
     private static final String apnsCertFilename = "gasp-cert.pem";
@@ -42,9 +53,9 @@ public class Config implements ServletContextListener {
     // AWS Credentials properties file: read via ClassLoader
     private static final String awsCredentialsFilename = "AwsCredentials.properties";
     private final InputStream awsCredentials = this
-                                               .getClass()
-                                               .getClassLoader()
-                                               .getResourceAsStream(awsCredentialsFilename);
+            .getClass()
+            .getClassLoader()
+            .getResourceAsStream(awsCredentialsFilename);
 
     // Apple Development iOS Push Services Certificate and Private Key
     private static String apnsCertificate;
@@ -93,8 +104,8 @@ public class Config implements ServletContextListener {
         try {
             // Load cert/key file via ClassLoader
             InputStream is = this.getClass()
-                                 .getClassLoader()
-                                 .getResourceAsStream(Filename);
+                    .getClassLoader()
+                    .getResourceAsStream(Filename);
 
             // Read PEM cert/key file from InputStream
             InputStreamReader isr = new InputStreamReader ( is ) ;
@@ -116,12 +127,12 @@ public class Config implements ServletContextListener {
 
     public void contextInitialized(ServletContextEvent event) {
         try {
-            // 1. System property
+            // 1. Check system properties for GCM_API_KEY
             if ((gcmApiKey = System.getProperty("GCM_API_KEY")) != null) {
                 LOGGER.debug("GCM_API_KEY (from system property): " + gcmApiKey);
             }
 
-            // 2. System environment
+            // 2. Check system environment for GCM_API_KEY
             else if ((gcmApiKey = System.getenv("GCM_API_KEY")) != null){
                 LOGGER.debug("GCM_API_KEY (from system environment): " + gcmApiKey);
             }
@@ -148,14 +159,14 @@ public class Config implements ServletContextListener {
             String applicationName = "gasp-snsmobile-service";
             LOGGER.debug("Application name: " + applicationName);
 
-            snsMobile.setSnsClient(Config.getAmazonSNS());
+            snsMobile.setSnsClient(this.getAmazonSNS());
 
             try {
                 // Create SNS Mobile Platform ARN for APN
                 snsMobile.setApnPlatformArn(
                         snsMobile.getPlatformArn(SNSMobile.Platform.APNS_SANDBOX,
-                                                 Config.getApnsCertificate(),
-                                                 Config.getApnsKey(),
+                                                 getApnsCertificate(),
+                                                 getApnsKey(),
                                                  applicationName));
                 LOGGER.info("Created APN Platform ARN: " + snsMobile.getApnPlatformArn());
 
@@ -163,7 +174,7 @@ public class Config implements ServletContextListener {
                 snsMobile.setGcmPlatformArn(
                         snsMobile.getPlatformArn(SNSMobile.Platform.GCM,
                                                  "",
-                                                 Config.getGcmApiKey(),
+                                                 getGcmApiKey(),
                                                  applicationName));
                 LOGGER.info("Created GCM platform ARN: " + snsMobile.getGcmPlatformArn());
 
@@ -193,16 +204,16 @@ public class Config implements ServletContextListener {
             snsMobile.deletePlatformApplication(snsMobile.getGcmPlatformArn());
             LOGGER.info("Deleted GCM platform ARN: " + snsMobile.getGcmPlatformArn());
 
-            } catch (AmazonServiceException ase) {
-                LOGGER.debug("AmazonServiceException");
-                LOGGER.debug("  Error Message:    " + ase.getMessage());
-                LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
-                LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
-                LOGGER.debug("  Error Type:       " + ase.getErrorType());
-                LOGGER.debug("  Request ID:       " + ase.getRequestId());
-            } catch (AmazonClientException ace) {
-                LOGGER.debug("AmazonClientException");
-                LOGGER.debug("  Error Message: " + ace.getMessage());
-            }
+        } catch (AmazonServiceException ase) {
+            LOGGER.debug("AmazonServiceException");
+            LOGGER.debug("  Error Message:    " + ase.getMessage());
+            LOGGER.debug("  HTTP Status Code: " + ase.getStatusCode());
+            LOGGER.debug("  AWS Error Code:   " + ase.getErrorCode());
+            LOGGER.debug("  Error Type:       " + ase.getErrorType());
+            LOGGER.debug("  Request ID:       " + ase.getRequestId());
+        } catch (AmazonClientException ace) {
+            LOGGER.debug("AmazonClientException");
+            LOGGER.debug("  Error Message: " + ace.getMessage());
+        }
     }
 }
