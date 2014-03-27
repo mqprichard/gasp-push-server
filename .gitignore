@@ -1,6 +1,41 @@
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
 *.class
 
-# Package Files #
-*.jar
-*.war
-*.ear
+# generated files
+bin/
+gen/
+target/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Eclipse project files
+.classpath
+.project
+.settings/
+
+# Keyfiles etc
+src/main/webapp/WEB-INF/classes/
+
+# Android Studio project files
+.idea/
+*.iml
+*.iws
+
+# Mac
+.DS_Store
+
+# Gradle
+build/
+.gradle/
+
+# Android Lint
+lint-results.xml
+
