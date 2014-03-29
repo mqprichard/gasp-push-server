@@ -65,6 +65,9 @@ public class PushServlet extends GuiceServletContextListener {
             .getClassLoader()
             .getResourceAsStream(awsCredentialsFilename);
 
+    private static String awsAccessKey;
+    private static String awsSecretKey;
+
     // Apple Development iOS Push Services Certificate and Private Key
     private static String apnsCertificate;
     private static String apnsKey;
@@ -102,8 +105,12 @@ public class PushServlet extends GuiceServletContextListener {
 
     // Decrypt Base64-encoded cipher text file via Classloader
     private String decryptFromFile(char[] key, byte[] salt, byte[] iv, String fileName) {
+        // javax.crypto parameters
         final String secretKeyFactoryAlgorithm = "PBKDF2WithHmacSHA1";
+        final String secretKeyAlgorithm = "AES";
         final String cipherAlgorithm = "AES/CBC/PKCS5Padding";
+        final int pbeKeySpecIterations= 65536;
+        final int pbeKeySpecKeyLength = 128;
 
         InputStream fis = null;         // Input stream from classloader
         InputStreamReader isr = null;   // Input stream reader
@@ -114,8 +121,7 @@ public class PushServlet extends GuiceServletContextListener {
             fis = this.getClass().getClassLoader().getResourceAsStream(fileName);
             isr = new InputStreamReader (fis) ;
 
-            String readString = new BufferedReader(isr).readLine ( ) ;
-            LOGGER.debug(readString);
+            String readString = new BufferedReader(isr).readLine ();
             fileContent = readString.getBytes();
         }
         catch(Exception e) {
@@ -133,14 +139,19 @@ public class PushServlet extends GuiceServletContextListener {
         try {
             /* Derive the key, given password and salt. */
             SecretKeyFactory factory = SecretKeyFactory.getInstance(secretKeyFactoryAlgorithm);
-            KeySpec spec = new PBEKeySpec(key, salt, 65536, 128);
+            KeySpec spec = new PBEKeySpec(key, salt, pbeKeySpecIterations, pbeKeySpecKeyLength);
             SecretKey tmp = factory.generateSecret(spec);
-            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), secretKeyAlgorithm);
 
             /* Decrypt the message, given derived key and initialization vector. */
             Cipher cipher = Cipher.getInstance(cipherAlgorithm);
             cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
             plaintext = cipher.doFinal(Base64.decodeBase64(fileContent));
+
+            // Log Decryption algorithms
+            LOGGER.debug("SecretKeyFactory: " + factory.getAlgorithm());
+            LOGGER.debug("Secret: " + secret.getAlgorithm());
+            LOGGER.debug("Cipher: " + cipher.getAlgorithm());
         }
         catch (Exception e) {
             LOGGER.error("Decryption error");
@@ -187,6 +198,8 @@ public class PushServlet extends GuiceServletContextListener {
             gcmApiKey = getSystem("GCM_API_KEY");
             aesSaltBase64 = getSystem("AES_SALT_BASE64");
             aesInitVectorBase64 = getSystem("AES_INIT_VECTOR_BASE64");
+            awsAccessKey = getSystem("AWS_ACCESS_KEY");
+            awsSecretKey = getSystem("AWS_SECRET_KEY");
 
             // Read AWS credentials and create new SNS client
             amazonSNS = new AmazonSNSClient(new PropertiesCredentials(awsCredentials));
