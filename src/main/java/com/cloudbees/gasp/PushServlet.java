@@ -2,7 +2,7 @@ package com.cloudbees.gasp;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.PropertiesCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.cloudbees.gasp.services.DataSyncService;
@@ -121,7 +121,7 @@ public class PushServlet extends GuiceServletContextListener {
             fis = this.getClass().getClassLoader().getResourceAsStream(fileName);
             isr = new InputStreamReader (fis) ;
 
-            String readString = new BufferedReader(isr).readLine ();
+            String readString = new BufferedReader(isr).readLine();
             fileContent = readString.getBytes();
         }
         catch(Exception e) {
@@ -179,13 +179,13 @@ public class PushServlet extends GuiceServletContextListener {
 
     private void getAPNSCredentials(String saltBase64, String ivBase64) {
         try {
-            byte [] mSalt = Base64.decodeBase64(saltBase64.getBytes());
-            byte[] mIv = Base64.decodeBase64(ivBase64.getBytes());
+            byte [] salt = Base64.decodeBase64(saltBase64.getBytes());
+            byte[] iv = Base64.decodeBase64(ivBase64.getBytes());
 
-            apnsCertificate = decryptFromFile(gcmApiKey.toCharArray(), mSalt, mIv, apnsCertBase64Filename);
+            apnsCertificate = decryptFromFile(gcmApiKey.toCharArray(), salt, iv, apnsCertBase64Filename);
             LOGGER.debug('\n' + apnsCertificate);
 
-            apnsKey = decryptFromFile(gcmApiKey.toCharArray(), mSalt, mIv, apnsKeyBase64Filename);
+            apnsKey = decryptFromFile(gcmApiKey.toCharArray(), salt, iv, apnsKeyBase64Filename);
             LOGGER.debug('\n' + apnsKey);
         }
         catch (Exception e) {
@@ -195,17 +195,17 @@ public class PushServlet extends GuiceServletContextListener {
 
     public void contextInitialized(ServletContextEvent event) {
         try {
+            // Get startup properties
             gcmApiKey = getSystem("GCM_API_KEY");
             aesSaltBase64 = getSystem("AES_SALT_BASE64");
             aesInitVectorBase64 = getSystem("AES_INIT_VECTOR_BASE64");
             awsAccessKey = getSystem("AWS_ACCESS_KEY");
             awsSecretKey = getSystem("AWS_SECRET_KEY");
 
-            // Read AWS credentials and create new SNS client
-            amazonSNS = new AmazonSNSClient(new PropertiesCredentials(awsCredentials));
-            LOGGER.debug("Read AWS Credentials from: " + getAwsCredentialsFilename());
+            // Get AWS SNS client
+            amazonSNS = new AmazonSNSClient(new BasicAWSCredentials(awsAccessKey, awsSecretKey));
 
-            // Read and decrypt APNS cert/key files
+            // Read and decrypt APNS certificate / key files
             getAPNSCredentials(aesSaltBase64, aesInitVectorBase64);
 
             String applicationName = "gasp-snsmobile-service";
