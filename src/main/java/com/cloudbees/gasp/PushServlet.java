@@ -5,8 +5,6 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
-import com.cloudbees.gasp.services.DataSyncService;
-import com.cloudbees.gasp.services.GCMRegistrationService;
 import com.cloudbees.gasp.services.SNSMobile;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -44,9 +42,6 @@ public class PushServlet extends GuiceServletContextListener {
             new JerseyServletModule() {
                 @Override
                 protected void configureServlets() {
-                    bind(GCMRegistrationService.class);
-                    bind(DataSyncService.class);
-
                     serve("/*").with(GuiceContainer.class);
                 }
             }
@@ -57,16 +52,10 @@ public class PushServlet extends GuiceServletContextListener {
     private static final String apnsCertBase64Filename = "gasp-cert.b64";
     private static final String apnsKeyBase64Filename = "gasp-key.b64";
 
-    // AWS Credentials properties file: read via ClassLoader
-    private static final String awsCredentialsFilename = "AwsCredentials.properties";
-
-    private final InputStream awsCredentials = this
-            .getClass()
-            .getClassLoader()
-            .getResourceAsStream(awsCredentialsFilename);
-
-    private static String awsAccessKey;
-    private static String awsSecretKey;
+    private final InputStream apnsCertBase64
+            = this.getClass().getClassLoader().getResourceAsStream(apnsCertBase64Filename);
+    private final InputStream apnsKeyBase64
+            = this.getClass().getClassLoader().getResourceAsStream(apnsKeyBase64Filename);
 
     // Apple Development iOS Push Services Certificate and Private Key
     private static String apnsCertificate;
@@ -74,9 +63,6 @@ public class PushServlet extends GuiceServletContextListener {
 
     // Google Cloud Messaging API Key
     private static String gcmApiKey;
-
-    private static String aesSaltBase64;
-    private static String aesInitVectorBase64;
 
     // AWS SNS Client object
     private static AmazonSNS amazonSNS;
@@ -99,12 +85,31 @@ public class PushServlet extends GuiceServletContextListener {
         return amazonSNS;
     }
 
-    public static String getAwsCredentialsFilename() {
-        return awsCredentialsFilename;
+    private String getBase64(InputStream fis) {
+        InputStreamReader isr = null;
+        String readString = "";
+
+        try {
+            isr = new InputStreamReader (fis) ;
+
+            readString = new BufferedReader(isr).readLine();
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (isr != null) isr.close();
+                fis.close();
+            }
+            catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
+        return readString;
     }
 
-    // Decrypt Base64-encoded cipher text file via Classloader
-    private String decryptFromFile(char[] key, byte[] salt, byte[] iv, String fileName) {
+    private String decryptFromBase64(char[] key, byte[] salt, byte[] iv, String ciphertext){
         // javax.crypto parameters
         final String secretKeyFactoryAlgorithm = "PBKDF2WithHmacSHA1";
         final String secretKeyAlgorithm = "AES";
@@ -112,30 +117,8 @@ public class PushServlet extends GuiceServletContextListener {
         final int pbeKeySpecIterations= 65536;
         final int pbeKeySpecKeyLength = 128;
 
-        InputStream fis = null;         // Input stream from classloader
-        InputStreamReader isr = null;   // Input stream reader
         byte[] plaintext = null;        // Plaintext
-        byte fileContent[] = null;      // Base64-encoded ciphertext
 
-        try {
-            fis = this.getClass().getClassLoader().getResourceAsStream(fileName);
-            isr = new InputStreamReader (fis) ;
-
-            String readString = new BufferedReader(isr).readLine();
-            fileContent = readString.getBytes();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-        finally {
-            try {
-                isr.close ( ) ;
-                fis.close();
-            }
-            catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-        }
         try {
             /* Derive the key, given password and salt. */
             SecretKeyFactory factory = SecretKeyFactory.getInstance(secretKeyFactoryAlgorithm);
@@ -146,7 +129,7 @@ public class PushServlet extends GuiceServletContextListener {
             /* Decrypt the message, given derived key and initialization vector. */
             Cipher cipher = Cipher.getInstance(cipherAlgorithm);
             cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
-            plaintext = cipher.doFinal(Base64.decodeBase64(fileContent));
+            plaintext = cipher.doFinal(Base64.decodeBase64(ciphertext.getBytes()));
 
             // Log Decryption algorithms
             LOGGER.debug("SecretKeyFactory: " + factory.getAlgorithm());
@@ -177,15 +160,17 @@ public class PushServlet extends GuiceServletContextListener {
         }
     }
 
-    private void getAPNSCredentials(String saltBase64, String ivBase64) {
+    private void getAppleCredentials(String saltBase64, String ivBase64) {
         try {
-            byte [] salt = Base64.decodeBase64(saltBase64.getBytes());
-            byte[] iv = Base64.decodeBase64(ivBase64.getBytes());
-
-            apnsCertificate = decryptFromFile(gcmApiKey.toCharArray(), salt, iv, apnsCertBase64Filename);
+            apnsCertificate = decryptFromBase64(getGcmApiKey().toCharArray(),
+                                                Base64.decodeBase64(saltBase64.getBytes()),
+                                                Base64.decodeBase64(ivBase64.getBytes()),
+                                                getBase64(apnsCertBase64));
             LOGGER.debug('\n' + apnsCertificate);
-
-            apnsKey = decryptFromFile(gcmApiKey.toCharArray(), salt, iv, apnsKeyBase64Filename);
+            apnsKey= decryptFromBase64(getGcmApiKey().toCharArray(),
+                                       Base64.decodeBase64(saltBase64.getBytes()),
+                                       Base64.decodeBase64(ivBase64.getBytes()),
+                                       getBase64(apnsKeyBase64));
             LOGGER.debug('\n' + apnsKey);
         }
         catch (Exception e) {
@@ -197,21 +182,22 @@ public class PushServlet extends GuiceServletContextListener {
         try {
             // Get startup properties
             gcmApiKey = getSystem("GCM_API_KEY");
-            aesSaltBase64 = getSystem("AES_SALT_BASE64");
-            aesInitVectorBase64 = getSystem("AES_INIT_VECTOR_BASE64");
-            awsAccessKey = getSystem("AWS_ACCESS_KEY");
-            awsSecretKey = getSystem("AWS_SECRET_KEY");
+            String aesSaltBase64 = getSystem("AES_SALT_BASE64");
+            String aesInitVectorBase64 = getSystem("AES_INIT_VECTOR_BASE64");
+            String awsAccessKey = getSystem("AWS_ACCESS_KEY");
+            String awsSecretKey = getSystem("AWS_SECRET_KEY");
 
             // Get AWS SNS client
             amazonSNS = new AmazonSNSClient(new BasicAWSCredentials(awsAccessKey, awsSecretKey));
 
             // Read and decrypt APNS certificate / key files
-            getAPNSCredentials(aesSaltBase64, aesInitVectorBase64);
+            //getAPNSCredentials(aesSaltBase64, aesInitVectorBase64);
+            getAppleCredentials(aesSaltBase64, aesInitVectorBase64);
 
             String applicationName = "gasp-snsmobile-service";
             LOGGER.debug("Application name: " + applicationName);
 
-            snsMobile.setSnsClient(this.getAmazonSNS());
+            snsMobile.setSnsClient(getAmazonSNS());
 
             try {
                 // Create SNS Mobile Platform ARN for APN
