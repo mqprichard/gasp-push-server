@@ -13,15 +13,20 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletContextEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.security.spec.KeySpec;
 
 
 /**
@@ -49,9 +54,13 @@ public class PushServlet extends GuiceServletContextListener {
     // APN Cert/Key PEM filenames: read via ClassLoader
     private static final String apnsCertFilename = "gasp-cert.pem";
     private static final String apnsKeyFilename = "gasp-key.pem";
+    private static final String apnsCertBase64Filename = "gasp-cert.b64";
+    private static final String apnsKeyBase64Filename = "gasp-key.b64";
 
     // AWS Credentials properties file: read via ClassLoader
     private static final String awsCredentialsFilename = "AwsCredentials.properties";
+    private static final String awsCredentialsBase64Filename = "AwsCredentials.b64";
+
     private final InputStream awsCredentials = this
             .getClass()
             .getClassLoader()
@@ -63,6 +72,9 @@ public class PushServlet extends GuiceServletContextListener {
 
     // Google Cloud Messaging API Key
     private static String gcmApiKey;
+
+    private static String aesSaltBase64;
+    private static String aesInitVectorBase64;
 
     // AWS SNS Client object
     private static AmazonSNS amazonSNS;
@@ -125,36 +137,135 @@ public class PushServlet extends GuiceServletContextListener {
         return StringUtils.chomp(pemData);
     }
 
+    private static byte[] mSalt;
+    private static byte[] mIv;
+
+    /*
+    // Generate salt value for AES encryption
+    private byte[] generateSalt() {
+        SecureRandom random = new SecureRandom();
+        byte bytes[] = new byte[8];
+        random.nextBytes(bytes);
+        LOGGER.debug("Salt (base64): " + new String(Base64.encodeBase64(bytes)));
+        mSalt = bytes;
+        return bytes;
+    }
+    */
+
+    public void encryptToFile(char[] key, byte[] salt, byte[] iv, byte[] input, String fileName) {
+        try {
+            /* Derive the key, given password and salt. */
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            KeySpec spec = new PBEKeySpec(key, salt, 65536, 128);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            /* Encrypt the message. */
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secret, new IvParameterSpec(iv));
+
+            LOGGER.debug(new String(Base64.encodeBase64(iv)));
+            byte[] ciphertext = cipher.doFinal(input);
+
+            LOGGER.debug("IV (base64): " + new String (Base64.encodeBase64(iv)));
+
+            //mIv = iv;
+
+            FileOutputStream fos = new FileOutputStream(new File(fileName));
+            fos.write(Base64.encodeBase64(ciphertext));
+            fos.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String decryptFromFile(char[] key, byte[] salt, byte[] iv, String fileName) {
+        FileInputStream fis = null;
+        byte[] plaintext = null;
+        byte fileContent[] = null;
+
+        try {
+            File in = new File(fileName);
+            fis = new FileInputStream(in);
+            fileContent = new byte[(int)in.length()];
+            fis.read(fileContent);
+        }
+        catch(Exception e) {
+            LOGGER.error("Error reading input file: " + fileName);
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                fis.close();
+            }
+            catch (IOException ioe) {
+                LOGGER.error("Error while closing stream: " + ioe);
+                ioe.printStackTrace();
+            }
+        }
+        try {
+            /* Derive the key, given password and salt. */
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            KeySpec spec = new PBEKeySpec(key, salt, 65536, 128);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            /* Decrypt the message, given derived key and initialization vector. */
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
+            plaintext = cipher.doFinal(Base64.decodeBase64(fileContent));
+        }
+        catch (Exception e) {
+            LOGGER.error("Decryption error");
+            e.printStackTrace();
+        }
+        return new String(plaintext);
+    }
+
+    private static String getSystem(String key){
+        String value;
+
+        if ((value = System.getProperty(key)) != null) {
+            return value;
+        }
+        else if ((value = System.getenv(key)) != null){
+            return value;
+        }
+        else {
+            LOGGER.error(key + " not set");
+            return null;
+        }
+
+    }
     public void contextInitialized(ServletContextEvent event) {
         try {
-            // 1. Check system properties for GCM_API_KEY
-            if ((gcmApiKey = System.getProperty("GCM_API_KEY")) != null) {
-                LOGGER.debug("GCM_API_KEY (from system property): " + gcmApiKey);
-            }
+            gcmApiKey = getSystem("GCM_API_KEY");
 
-            // 2. Check system environment for GCM_API_KEY
-            else if ((gcmApiKey = System.getenv("GCM_API_KEY")) != null){
-                LOGGER.debug("GCM_API_KEY (from system environment): " + gcmApiKey);
-            }
-
-            // Error: GCM_API_KEY not set
-            else {
-                LOGGER.error("GCM_API_KEY not set");
-            }
+            aesSaltBase64 = getSystem("AES_SALT_BASE64");
+            LOGGER.debug("Salt: " + aesSaltBase64);
+            mSalt = Base64.decodeBase64(aesSaltBase64.getBytes());
+            aesInitVectorBase64 = getSystem("AES_INIT_VECTOR_BASE64");
+            LOGGER.debug("IV: " + aesInitVectorBase64);
+            mIv = Base64.decodeBase64(aesInitVectorBase64.getBytes());
 
             // Read APN iOS Push Service Certificate from ClassLoader
-            apnsCertificate = getPemFromStream(apnsCertFilename);
-            LOGGER.debug("Read APNS certificate from: " + getApnsCertFilename());
-            LOGGER.debug('\n' + apnsCertificate);
+            //apnsCertificate = getPemFromStream(apnsCertFilename);
 
             // Read APN iOS Push Service Private Key from ClassLoader
-            apnsKey = getPemFromStream(apnsKeyFilename);
-            LOGGER.debug("Read APNS private key from: " + getApnsKeyFilename());
-            LOGGER.debug('\n' + apnsKey);
+            //apnsKey = getPemFromStream(apnsKeyFilename);
 
             // Read AWS credentials and create new SNS client
             amazonSNS = new AmazonSNSClient(new PropertiesCredentials(awsCredentials));
             LOGGER.debug("Read AWS Credentials from: " + getAwsCredentialsFilename());
+
+            //encryptToFile(gcmApiKey.toCharArray(), mSalt, mIv, apnsCertificate.getBytes(), apnsCertBase64Filename);
+            apnsCertificate = decryptFromFile(gcmApiKey.toCharArray(), mSalt, mIv, apnsCertBase64Filename);
+            LOGGER.debug('\n' + apnsCertificate);
+
+            //encryptToFile(gcmApiKey.toCharArray(), mSalt, mIv, apnsKey.getBytes(), apnsKeyBase64Filename);
+            apnsKey = decryptFromFile(gcmApiKey.toCharArray(), mSalt, mIv, apnsKeyBase64Filename);
+            LOGGER.debug('\n' + apnsKey);
 
             String applicationName = "gasp-snsmobile-service";
             LOGGER.debug("Application name: " + applicationName);
