@@ -25,9 +25,9 @@ Setup
    - There is a commandline example [here](https://github.com/mqprichard/gasp-encrypt.git) that shows how to encrypt/encode the files
    - The build uses the [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin) to inject the encrypted/encoded files into the build.
    - The following environment variables are used to decode/decrypt the cert/key files:
-   - 'AES_SALT_BASE64=<the salt value: base64-encoded>'
-   - 'AES_INIT_VECTOR_BASE64=<the initialization vector: base64-encoded>'
-   - 'GCM_API_KEY=<the Google APIs key for GCM>', used as the encryption/decryption key
+   - `AES_SALT_BASE64=<the salt value: base64-encoded>`
+   - `AES_INIT_VECTOR_BASE64=<the initialization vector: base64-encoded>`
+   - `GCM_API_KEY=<the Google APIs key for GCM>`, used as the encryption/decryption key
 
 5. Configure Google APIs for Google Cloud Messaging
    - Logon to [Google APIs Console](https://code.google.com/apis/console)
