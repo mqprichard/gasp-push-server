@@ -43,10 +43,10 @@ Setup
    - Copy your iOS Push Services certificate (in Base64-encoded format) to `src/main/webapp/WEB-INF/classes/gasp-cert.b64`
    - Copy your iOS Push Services private key (in Base64-encoded format) to `src/main/webapp/WEB-INF/classes/gasp-key.b64`
    - `mvn build install`
-   - (to test locally) `mvn bees:run -DGCM_APIKEY=<xxx> -DAES_SALT_BASE64=<xxx> -DAES_INIT_VECTOR_BASE64=<xxx> -DAWS_ACCESS_KEY=<xxx> -DAWS_SECRET_KEY=<xxx>` and use localhost:8080 for all curl commands
+   - (to test locally) `mvn bees:run -DGCM_API_KEY=<xxx> -DAES_SALT_BASE64=<xxx> -DAES_INIT_VECTOR_BASE64=<xxx> -DAWS_ACCESS_KEY=<xxx> -DAWS_SECRET_KEY=<xxx>` and use localhost:8080 for all curl commands
 
 7. Deploy to CloudBees:
-   - `bees app:deploy -a gasp-push-server -P GCM_APIKEY=<xxx> -P AES_SALT_BASE64=<xxx> -P AES_INIT_VECTOR_BASE64=<xxx> -P AWS_ACCESS_KEY=<xxx> -P AWS_SECRET_KEY=<xxx> target/gasp-push-server.war`
+   - `bees app:deploy -a gasp-push-server -P GCM_API_KEY=<xxx> -P AES_SALT_BASE64=<xxx> -P AES_INIT_VECTOR_BASE64=<xxx> -P AWS_ACCESS_KEY=<xxx> -P AWS_SECRET_KEY=<xxx> target/gasp-push-server.war`
 
 8. To test the service:
    - `curl -X POST http://gasp-push.partnerdemo.cloudbees.net/gcm/register -d 'regId=<GCM device token>'`
